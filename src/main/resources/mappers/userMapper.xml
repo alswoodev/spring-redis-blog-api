@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.blog.mapper.UserProfileMapper">
+
+    <!-- 회원 정보 조회 -->
+    <select id="getUserProfile" resultType="com.example.blog.dto.UserDTO">
+        SELECT id,
+               user_id AS userId,
+               password AS password,
+               nick_name AS nickName,
+               create_time AS createTime,
+               is_withdraw AS isWithDraw,
+               status,
+               is_admin AS isAdmin
+        FROM users
+        WHERE user_id = #{id}
+    </select>
+
+    <!-- 회원가입 (insert) -->
+    <insert id="insertUserProfile" parameterType="com.example.blog.dto.UserDTO">
+        INSERT INTO users (user_id, password, nick_name, create_time, is_withdraw, status, is_admin)
+        VALUES (#{userId}, #{password}, #{nickName}, #{createTime}, #{isWithDraw}, #{status}, #{isAdmin})
+    </insert>
+
+    <insert id="register" parameterType="com.example.blog.dto.UserDTO">
+        INSERT INTO users (user_id, password, nick_name, create_time, is_withdraw, status, is_admin)
+        VALUES (#{userId}, #{password}, #{nickName}, #{createTime}, #{isWithDraw}, #{status}, #{isAdmin})
+    </insert>
+
+    <!-- 회원 정보 수정 -->
+    <update id="updateUserProfile" parameterType="com.example.blog.dto.UserDTO">
+        UPDATE users
+        SET password = #{password},
+            nick_name = #{nickName},
+            is_withdraw = #{isWithDraw},
+            status = #{status},
+            is_admin = #{isAdmin},
+            update_time = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <!-- 비밀번호 변경 -->
+    <update id="updatePassword" parameterType="com.example.blog.dto.UserDTO">
+        UPDATE users
+        SET password = #{password},
+            update_time = CURRENT_TIMESTAMP
+        WHERE user_id = #{userId}
+    </update>
+
+    <!-- 회원 삭제 -->
+    <delete id="deleteUserProfile" parameterType="string">
+        DELETE FROM users
+        WHERE user_id = #{id}
+    </delete>
+
+    <!-- 로그인 -->
+    <select id="findByIdAndPassword" resultType="com.example.blog.dto.UserDTO">
+        SELECT id,
+               user_id AS userId,
+               password AS password,
+               nick_name AS nickName,
+               create_time AS createTime,
+               is_withdraw AS isWithDraw,
+               status,
+               is_admin AS isAdmin
+        FROM users
+        WHERE user_id = #{id}
+          AND password = #{password}
+          AND status != 'DELETED'
+    </select>
+
+    <!-- ID 중복 체크 -->
+    <select id="idCheck" parameterType="string" resultType="int">
+        SELECT COUNT(id)
+        FROM users
+        WHERE user_id = #{userId}
+    </select>
+
+</mapper>

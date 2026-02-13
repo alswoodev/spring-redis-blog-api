@@ -1,4 +1,4 @@
-package com.example.blog.config;
+/*package com.example.blog.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
@@ -9,9 +9,10 @@ import javax.sql.DataSource;
 
 @Configuration
 public class DatabaseConfig {
-    @ConfigurationProperties(prefix = "spring.datasource")
+
     @Bean
+    @ConfigurationProperties(prefix = "spring.datasource")
     public DataSource dataSource(){
         return DataSourceBuilder.create().build();
     }
-}
+}*/

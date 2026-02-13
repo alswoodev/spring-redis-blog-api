@@ -10,7 +10,7 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import javax.sql.DataSource;
 
 @Configuration
-@MapperScan(basePackages = "com.example.blog")
+@MapperScan(basePackages = "com.example.blog.mapper")
 public class PostgreSQLConfig {
 
     @Bean

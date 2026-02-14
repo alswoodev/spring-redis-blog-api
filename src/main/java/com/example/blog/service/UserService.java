@@ -6,13 +6,13 @@ public interface UserService {
 
     void register(UserDTO userProfile);
 
-    UserDTO login(String id, String password);
+    UserDTO login(String userId, String password);
 
-    boolean isDuplicatedId(String id);
+    boolean isDuplicatedId(String userId);
 
-    UserDTO getUserInfo(String userId);
+    UserDTO getUserInfo(Long id);
 
-    void updatePassword(String id, String beforePassword, String afterPassword);
+    void updatePassword(Long id, String beforePassword, String afterPassword);
 
-    void deleteId(String id, String passWord);
+    void deleteId(Long id, String password);
 }

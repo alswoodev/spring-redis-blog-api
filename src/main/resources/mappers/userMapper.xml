@@ -3,39 +3,32 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.example.blog.mapper.UserProfileMapper">
+<mapper namespace="com.example.blog.mapper.UserMapper">
 
     <!-- 회원 정보 조회 -->
     <select id="getUserProfile" resultType="com.example.blog.dto.UserDTO">
         SELECT id,
                user_id AS userId,
-               password AS password,
-               nick_name AS nickName,
-               create_time AS createTime,
-               is_withdraw AS isWithDraw,
+               password,
+               nickname,
                status,
+               create_time AS createTime,
                is_admin AS isAdmin
         FROM users
-        WHERE user_id = #{id}
+        WHERE id = #{id}
     </select>
 
     <!-- 회원가입 (insert) -->
     <insert id="insertUserProfile" parameterType="com.example.blog.dto.UserDTO">
-        INSERT INTO users (user_id, password, nick_name, create_time, is_withdraw, status, is_admin)
-        VALUES (#{userId}, #{password}, #{nickName}, #{createTime}, #{isWithDraw}, #{status}, #{isAdmin})
-    </insert>
-
-    <insert id="register" parameterType="com.example.blog.dto.UserDTO">
-        INSERT INTO users (user_id, password, nick_name, create_time, is_withdraw, status, is_admin)
-        VALUES (#{userId}, #{password}, #{nickName}, #{createTime}, #{isWithDraw}, #{status}, #{isAdmin})
+        INSERT INTO users (user_id, password, nickname, status, create_time, is_admin)
+        VALUES (#{userId}, #{password}, #{nickname}, #{status}, #{createTime}, #{isAdmin})
     </insert>
 
     <!-- 회원 정보 수정 -->
     <update id="updateUserProfile" parameterType="com.example.blog.dto.UserDTO">
         UPDATE users
         SET password = #{password},
-            nick_name = #{nickName},
-            is_withdraw = #{isWithDraw},
+            nickname = #{nickname},
             status = #{status},
             is_admin = #{isAdmin},
             update_time = CURRENT_TIMESTAMP
@@ -47,27 +40,26 @@
         UPDATE users
         SET password = #{password},
             update_time = CURRENT_TIMESTAMP
-        WHERE user_id = #{userId}
+        WHERE id = #{id}
     </update>
 
     <!-- 회원 삭제 -->
-    <delete id="deleteUserProfile" parameterType="string">
+    <delete id="deleteUserProfile" parameterType="long">
         DELETE FROM users
-        WHERE user_id = #{id}
+        WHERE id = #{id}
     </delete>
 
     <!-- 로그인 -->
-    <select id="findByIdAndPassword" resultType="com.example.blog.dto.UserDTO">
+    <select id="findByUserIdAndPassword" resultType="com.example.blog.dto.UserDTO">
         SELECT id,
                user_id AS userId,
-               password AS password,
-               nick_name AS nickName,
-               create_time AS createTime,
-               is_withdraw AS isWithDraw,
+               password,
+               nickname,
                status,
+               create_time AS createTime,
                is_admin AS isAdmin
         FROM users
-        WHERE user_id = #{id}
+        WHERE user_id = #{userId}
           AND password = #{password}
           AND status != 'DELETED'
     </select>

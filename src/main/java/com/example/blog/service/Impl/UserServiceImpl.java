@@ -2,7 +2,7 @@ package com.example.blog.service.Impl;
 
 import com.example.blog.dto.UserDTO;
 import com.example.blog.exception.DuplicateIdException;
-import com.example.blog.mapper.UserProfileMapper;
+import com.example.blog.mapper.UserMapper;
 import com.example.blog.service.UserService;
 import com.example.blog.utils.SHA256Util;
 
@@ -12,21 +12,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.Objects;
 
 @Service
 @Log4j2
 public class UserServiceImpl implements UserService {
 
     @Autowired
-    private UserProfileMapper userProfileMapper;
+    private UserMapper userProfileMapper;
 
-    public UserServiceImpl(UserProfileMapper userProfileMapper) {
+    public UserServiceImpl(UserMapper userProfileMapper) {
         this.userProfileMapper = userProfileMapper;
-    }
-
-    @Override
-    public UserDTO getUserInfo(String userId) {
-        return userProfileMapper.getUserProfile(userId);
     }
 
     @Override
@@ -42,7 +38,7 @@ public class UserServiceImpl implements UserService {
         userDTO.setPassword(SHA256Util.encryptSHA256(userDTO.getPassword()));
 
         // Insert user
-        int insertCount = userProfileMapper.register(userDTO);
+        int insertCount = userProfileMapper.insertUserProfile(userDTO);
 
         // If everything is correct, count must be 1
         if (insertCount != 1) {
@@ -53,54 +49,60 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDTO login(String id, String password) {
+    public boolean isDuplicatedId(String userId) {
+        return userProfileMapper.idCheck(userId) > 0;
+    }
+
+    @Override
+    public UserDTO login(String userId, String password) {
         // Hash the input password
         String cryptoPassword = SHA256Util.encryptSHA256(password);
 
-        UserDTO memberInfo = userProfileMapper.findByIdAndPassword(id, cryptoPassword);
+        UserDTO memberInfo = userProfileMapper.findByUserIdAndPassword(userId, cryptoPassword);
         return memberInfo;
     }
 
     @Override
-    public boolean isDuplicatedId(String id) {
-        return userProfileMapper.idCheck(id) == 1;
+    public UserDTO getUserInfo(Long id) {
+        return userProfileMapper.getUserProfile(id);
     }
 
     @Override
-    public void updatePassword(String id, String beforePassword, String afterPassword) {
+    public void updatePassword(Long id, String beforePassword, String afterPassword) {
         // Hash the input before password
         String cryptoPassword = SHA256Util.encryptSHA256(beforePassword);
-        UserDTO memberInfo = userProfileMapper.findByIdAndPassword(id, cryptoPassword);
+        UserDTO memberInfo = userProfileMapper.getUserProfile(id);
 
         // Find the user if the previous password is correct
-        if (memberInfo != null) {
-            memberInfo.setPassword(SHA256Util.encryptSHA256(afterPassword));
-            int insertCount = userProfileMapper.updatePassword(memberInfo);
+        if (Objects.equals(memberInfo.getPassword(), cryptoPassword)) {
+            int updateCount = userProfileMapper.updatePassword(id, SHA256Util.encryptSHA256(afterPassword));
 
             // If fail to insert
-            if (insertCount != 1) {
-                log.error("insertMember ERROR! {}", memberInfo);
+            if (updateCount != 1) {
+                log.error("updateUser ERROR! {}", memberInfo);
                 throw new RuntimeException(
-                        "insertUser ERROR! \n" + "Params : " + memberInfo);
+                        "updateUser ERROR! \n" + "Params : " + memberInfo);
             }
         } else {
-            log.error("updatePasswrod ERROR! {}", memberInfo);
-            throw new IllegalArgumentException("updatePasswrod ERROR! 비밀번호 변경 메서드를 확인해주세요\n" + "Params : " + memberInfo);
+            log.error("Invalid password ERROR! {}", memberInfo);
+            throw new IllegalArgumentException("Invalid passwrod ERROR! 비밀번호 변경 메서드를 확인해주세요\n" + "Params : " + memberInfo
+                + "new password" + cryptoPassword
+            );
         }
     }
 
     @Override
-    public void deleteId(String id, String passWord) {
+    public void deleteId(Long id, String password) {
         // Hash the input password
-        String cryptoPassword = SHA256Util.encryptSHA256(passWord);
-        UserDTO memberInfo = userProfileMapper.findByIdAndPassword(id, cryptoPassword);
+        String cryptoPassword = SHA256Util.encryptSHA256(password);
+        UserDTO memberInfo = userProfileMapper.getUserProfile(id);
 
         // Find the user if the password is correct
-        if (memberInfo != null) {
-            userProfileMapper.deleteUserProfile(memberInfo.getUserId());
+        if (Objects.equals(memberInfo.getPassword(), cryptoPassword)) {
+            userProfileMapper.deleteUserProfile(id);
         } else {
-            log.error("deleteId ERROR! {}", memberInfo);
-            throw new RuntimeException("deleteId ERROR! id 삭제 메서드를 확인해주세요\n" + "Params : " + memberInfo);
+            log.error("Invalid password ERROR! {}", memberInfo);
+            throw new RuntimeException("Invalid password ERROR! id 삭제 메서드를 확인해주세요\n" + "Params : " + memberInfo);
         }
     }
 }

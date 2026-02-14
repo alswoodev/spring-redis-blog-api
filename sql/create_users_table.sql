@@ -1,10 +1,12 @@
 CREATE TABLE users ( 
-    id SERIAL PRIMARY KEY, 
+    id BIGSERIAL PRIMARY KEY, 
     user_id VARCHAR(50) NOT NULL UNIQUE, 
     password VARCHAR(255) NOT NULL, 
-    nick_name VARCHAR(50) NOT NULL, 
+    nickname VARCHAR(50) NOT NULL, 
     status VARCHAR(20) DEFAULT 'DEFAULT', 
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
-    is_admin BOOLEAN DEFAULT FALSE, 
-    is_withdraw BOOLEAN DEFAULT FALSE );
+    is_admin BOOLEAN DEFAULT FALSE
+);
+
+CREATE INDEX idx_users_user_id ON users(user_id);

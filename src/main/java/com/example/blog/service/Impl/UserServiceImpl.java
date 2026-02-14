@@ -1,8 +1,9 @@
-package com.example.blog.service;
+package com.example.blog.service.Impl;
 
 import com.example.blog.dto.UserDTO;
 import com.example.blog.exception.DuplicateIdException;
 import com.example.blog.mapper.UserProfileMapper;
+import com.example.blog.service.UserService;
 import com.example.blog.utils.SHA256Util;
 
 import lombok.extern.log4j.Log4j2;

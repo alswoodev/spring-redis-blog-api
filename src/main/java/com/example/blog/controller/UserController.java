@@ -1,5 +1,6 @@
 package com.example.blog.controller;
 
+import com.example.blog.aop.LoginCheck;
 import com.example.blog.dto.UserDTO;
 import com.example.blog.dto.request.UserDeleteId;
 import com.example.blog.dto.request.UserLoginRequest;
@@ -64,23 +65,22 @@ public class UserController {
     }
 
      @GetMapping("my-info")
-    public ResponseEntity<UserDTO> memberInfo(HttpSession session) {
+     @LoginCheck(type = LoginCheck.UserType.USER)
+    public ResponseEntity<UserDTO> memberInfo(String id, HttpSession session) {
         // Get regular user's id
-        String id = SessionUtil.getLoginMemberId(session);
         if (id == null) id = SessionUtil.getLoginAdminId(session); // Get admin user's id
 
-        // If the ID is not found for either regular or admin user
-        if (id == null) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        // Unauthorized check via @LoginCheck annotation
 
         UserDTO memberInfo = userService.getUserInfo(id);
         return new ResponseEntity<>(memberInfo, HttpStatus.OK);
     }
 
     @PatchMapping("password")
-    public ResponseEntity<Void> updateUserPassword(@RequestBody UserUpdatePasswordRequest request,
+    @LoginCheck(type = LoginCheck.UserType.USER)
+    public ResponseEntity<Void> updateUserPassword(String id, @RequestBody UserUpdatePasswordRequest request,
                                         HttpSession session) {
-        String id = SessionUtil.getLoginMemberId(session);
-        if(id == null) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        // Unauthorized check via @LoginCheck annotation
 
         // Update password
         try{
@@ -93,10 +93,10 @@ public class UserController {
     }
 
     @DeleteMapping
-    public ResponseEntity<Void> deleteId(@RequestBody UserDeleteId userDeleteId,
+    @LoginCheck(type = LoginCheck.UserType.USER)
+    public ResponseEntity<Void> deleteId(String id, @RequestBody UserDeleteId userDeleteId,
                                        HttpSession session) {
-        String id = SessionUtil.getLoginMemberId(session);
-        if(id == null) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        // Unauthorized check via @LoginCheck annotation
 
         // Delete user from DB
         try {

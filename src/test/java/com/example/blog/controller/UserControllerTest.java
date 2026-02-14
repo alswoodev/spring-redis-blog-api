@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -57,10 +58,9 @@ class UserControllerTest {
         userDTO = new UserDTO();
         userDTO.setUserId("testUser");
         userDTO.setPassword("password123");
-        userDTO.setNickName("TEST");
+        userDTO.setNickname("TEST");
         userDTO.setAdmin(false);
         userDTO.setCreateTime(new Date());
-        userDTO.setWithDraw(false);
         userDTO.setStatus(UserDTO.Status.DEFAULT);
 
         loginRequest = new UserLoginRequest();
@@ -125,12 +125,11 @@ class UserControllerTest {
     void testMemberInfo_Success() throws Exception {
         //given
         // userService.getUserInfo() is mocked to succeed
-        when(userService.getUserInfo("testUser")).thenReturn(userDTO);
+        when(userService.getUserInfo(any(Long.class))).thenReturn(userDTO);
 
         //when && then
         mockMvc.perform(get("/users/my-info")
-                        .param("id", "testUser")
-                        .sessionAttr("loginMemberId", "testUser"))
+                        .param("id", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value("testUser"));
     }
@@ -144,14 +143,13 @@ class UserControllerTest {
         request.setAfterPassword("newPassword");
 
         // userService.updatePassword() is mocked to succeed
-        doNothing().when(userService).updatePassword(anyString(), anyString(), anyString());
+        doNothing().when(userService).updatePassword(anyLong(), anyString(), anyString());
 
         //when && then
         mockMvc.perform(patch("/users/password")
-                        .param("id", "testUser")
+                        .param("id", "1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .sessionAttr("loginMemberId", "testUser"))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
     }
 
@@ -165,14 +163,13 @@ class UserControllerTest {
 
         // userService.updatePassword() is mocked to throw IllegalArgumentException (simulate invalid before password)
         doThrow(new IllegalArgumentException()).when(userService)
-                .updatePassword(anyString(), anyString(), anyString());
+                .updatePassword(anyLong(), anyString(), anyString());
 
         //when && then
         mockMvc.perform(patch("/users/password")
-                        .param("id", "testUser")
+                        .param("id", "1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .sessionAttr("loginMemberId", "testUser"))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -184,14 +181,13 @@ class UserControllerTest {
         request.setPassword("password123");
 
         // userService.deleteId() is mocked to succeed
-        doNothing().when(userService).deleteId(anyString(), anyString());
+        doNothing().when(userService).deleteId(anyLong(), anyString());
 
         //when && then
         mockMvc.perform(delete("/users")
-                        .param("id", "testUser")
+                        .param("id", "1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .sessionAttr("loginMemberId", "testUser"))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
     }
 
@@ -203,14 +199,13 @@ class UserControllerTest {
         request.setPassword("password123");
 
         // userService.deleteId() is mocked to throw RuntimeException (simulate invalid password)
-        doThrow(new RuntimeException()).when(userService).deleteId(anyString(), anyString());
+        doThrow(new RuntimeException()).when(userService).deleteId(anyLong(), anyString());
 
         //when && then
         mockMvc.perform(delete("/users")
-                        .param("id", "testUser")
+                        .param("id", "1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .sessionAttr("loginMemberId", "testUser"))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 }

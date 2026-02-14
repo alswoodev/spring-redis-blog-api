@@ -56,9 +56,9 @@ public class UserController {
 
         // Separate session logic for admin and regular user
         if (userInfo.getStatus() == UserDTO.Status.ADMIN) {
-            SessionUtil.setLoginAdminId(session, userInfo.getUserId());
+            SessionUtil.setLoginAdminId(session, userInfo.getId());
         } else {
-            SessionUtil.setLoginMemberId(session, userInfo.getUserId());
+            SessionUtil.setLoginMemberId(session, userInfo.getId());
         }
 
         return new ResponseEntity<>(LoginResponse.success(userInfo), HttpStatus.OK);
@@ -66,9 +66,9 @@ public class UserController {
 
      @GetMapping("my-info")
      @LoginCheck(type = LoginCheck.UserType.USER)
-    public ResponseEntity<UserDTO> memberInfo(String id, HttpSession session) {
-        // Get regular user's id
-        if (id == null) id = SessionUtil.getLoginAdminId(session); // Get admin user's id
+    public ResponseEntity<UserDTO> memberInfo(Long id, HttpSession session) {
+        // Get admin user's id if login check is failed
+        if (id == null) id = SessionUtil.getLoginAdminId(session);
 
         // Unauthorized check via @LoginCheck annotation
 
@@ -78,7 +78,7 @@ public class UserController {
 
     @PatchMapping("password")
     @LoginCheck(type = LoginCheck.UserType.USER)
-    public ResponseEntity<Void> updateUserPassword(String id, @RequestBody UserUpdatePasswordRequest request,
+    public ResponseEntity<Void> updateUserPassword(Long id, @RequestBody UserUpdatePasswordRequest request,
                                         HttpSession session) {
         // Unauthorized check via @LoginCheck annotation
 
@@ -94,7 +94,7 @@ public class UserController {
 
     @DeleteMapping
     @LoginCheck(type = LoginCheck.UserType.USER)
-    public ResponseEntity<Void> deleteId(String id, @RequestBody UserDeleteId userDeleteId,
+    public ResponseEntity<Void> deleteId(Long id, @RequestBody UserDeleteId userDeleteId,
                                        HttpSession session) {
         // Unauthorized check via @LoginCheck annotation
 

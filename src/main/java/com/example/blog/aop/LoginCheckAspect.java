@@ -38,7 +38,7 @@ public class LoginCheckAspect {
         // 2. Get HttpSession from HttpServletRequest
         HttpSession session = requestAttribute.getRequest().getSession();
 
-        String id = null;
+        Long id = null;
         int idIndex = 0;
 
 

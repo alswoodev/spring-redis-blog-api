@@ -7,16 +7,16 @@ public class SessionUtil {
     private static final String LOGIN_ADMIN_ID = "LOGIN_ADMIN_ID";
     private SessionUtil() {
     }
-    public static String getLoginMemberId(HttpSession session) {
-        return (String) session.getAttribute(LOGIN_MEMBER_ID);
+    public static Long getLoginMemberId(HttpSession session) {
+        return (Long) session.getAttribute(LOGIN_MEMBER_ID);
     }
-    public static void setLoginMemberId(HttpSession session, String id) {
+    public static void setLoginMemberId(HttpSession session, Long id) {
         session.setAttribute(LOGIN_MEMBER_ID, id);
     }
-    public static String getLoginAdminId(HttpSession session) {
-        return (String) session.getAttribute(LOGIN_ADMIN_ID);
+    public static Long getLoginAdminId(HttpSession session) {
+        return (Long) session.getAttribute(LOGIN_ADMIN_ID);
     }
-    public static void setLoginAdminId(HttpSession session, String id) {
+    public static void setLoginAdminId(HttpSession session, Long id) {
         session.setAttribute(LOGIN_ADMIN_ID, id);
     }
     public static void clear(HttpSession session) {

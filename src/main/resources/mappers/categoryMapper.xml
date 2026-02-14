@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.blog.mapper.CategoryMapper">
+
+    <select id="findByName" resultType="long">
+        SELECT id
+        FROM categories
+        WHERE name = #{name}
+    </select>
+
+    <insert id="register">
+        INSERT INTO categories (name)
+        VALUES (#{name})
+    </insert>
+
+    <update id="updateCategory">
+        UPDATE categories
+        SET name = #{name}
+        WHERE id = #{categoryId}
+    </update>
+
+    <delete id="deleteCategory">
+        DELETE FROM categories
+        WHERE id = #{categoryId}
+    </delete>
+
+</mapper>

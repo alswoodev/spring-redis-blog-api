@@ -20,8 +20,8 @@
 
     <!-- 회원가입 (insert) -->
     <insert id="insertUserProfile" parameterType="com.example.blog.dto.UserDTO">
-        INSERT INTO users (user_id, password, nickname, status, create_time, is_admin)
-        VALUES (#{userId}, #{password}, #{nickname}, #{status}, #{createTime}, #{isAdmin})
+        INSERT INTO users (user_id, password, nickname, status, is_admin)
+        VALUES (#{userId}, #{password}, #{nickname}, #{status}, #{isAdmin})
     </insert>
 
     <!-- 회원 정보 수정 -->

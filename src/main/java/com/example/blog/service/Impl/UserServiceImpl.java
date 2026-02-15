@@ -11,7 +11,6 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
 import java.util.Objects;
 
 @Service
@@ -33,7 +32,6 @@ public class UserServiceImpl implements UserService {
             throw new DuplicateIdException("중복된 아이디입니다.");
         }
 
-        userDTO.setCreateTime(new Date());
         // Hashing password
         userDTO.setPassword(SHA256Util.encryptSHA256(userDTO.getPassword()));
 

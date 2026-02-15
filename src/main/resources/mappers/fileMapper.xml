@@ -6,8 +6,8 @@
 <mapper namespace="com.example.blog.mapper.FileMapper">
 
     <insert id="insertFile" parameterType="com.example.blog.dto.FileDTO">
-        INSERT INTO files (path, name, extension, post_id, create_time)
-        VALUES (#{path}, #{name}, #{extension}, #{postId}, #{createTime})
+        INSERT INTO files (path, name, extension, post_id)
+        VALUES (#{path}, #{name}, #{extension}, #{postId})
     </insert>
 
     <select id="findByPostId" resultType="com.example.blog.dto.FileDTO">

@@ -14,7 +14,6 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
 import java.util.List;
 
 @Service
@@ -38,7 +37,6 @@ public class PostServiceImpl implements PostService {
 
         if (memberInfo != null) {
             postDTO.setUserId(memberInfo.getId());
-            postDTO.setCreateTime(new Date());
             if(PostDTO.hasNullData(postDTO) == true) throw new IllegalArgumentException("제목, 내용은 필수 입력값입니다.");
             postMapper.insertPost(postDTO);
         } else {
@@ -100,7 +98,6 @@ public class PostServiceImpl implements PostService {
             // Assign the postId to each FileDTO and persist them
             files.stream()
                 .peek(file -> file.setPostId(postId))
-                .peek(file -> file.setCreateTime(new Date()))
                 .forEach(fileMapper::insertFile);
         } catch (DataAccessException e){
             log.error("Attach Files ERROR! {}", files);
@@ -134,7 +131,6 @@ public class PostServiceImpl implements PostService {
             currentFiles.stream()
                     .filter(file -> !existingFiles.contains(file)) // Select currentFiles that existingFiles don't have
                     .peek(file -> file.setPostId(postId))
-                    .peek(file -> file.setCreateTime(new Date()))
                     .forEach(fileMapper::insertFile);
         } catch (DataAccessException e) {
             log.error("Update Files ERROR! {}", currentFiles);

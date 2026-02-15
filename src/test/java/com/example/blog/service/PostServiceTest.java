@@ -3,7 +3,6 @@ package com.example.blog.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collections;
-import java.util.Date;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.blog.dto.FileDTO;
 import com.example.blog.dto.PostDTO;
 import com.example.blog.dto.UserDTO;
-import com.example.blog.dto.UserDTO.Status;
 import com.example.blog.mapper.FileMapper;
 
 @SpringBootTest
@@ -39,9 +37,6 @@ public class PostServiceTest {
         userDTO.setUserId("test");
         userDTO.setPassword("test");
         userDTO.setNickname("test");
-        userDTO.setStatus(Status.DEFAULT);
-        userDTO.setCreateTime(new Date());
-        userDTO.setAdmin(false);
         userService.register(userDTO);
         userId = userService.login("test","test").getId();
 

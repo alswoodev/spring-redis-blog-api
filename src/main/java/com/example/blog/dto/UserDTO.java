@@ -17,8 +17,8 @@ public class UserDTO {
     private String userId;
     private String password;
     private String nickname;
-    private boolean isAdmin;
-    private Status status;
+    private boolean isAdmin = false;
+    private Status status = Status.DEFAULT;
     private Date createTime;
     private Date updateTime;
 

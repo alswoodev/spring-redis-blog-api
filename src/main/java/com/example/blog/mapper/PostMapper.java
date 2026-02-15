@@ -13,7 +13,7 @@ public interface PostMapper {
 
     public PostDTO getPost(Long id);
 
-    public void updatePost(PostDTO postDTO);
+    public int updatePost(PostDTO postDTO);
 
-    public void deletePost(Long id);
+    public int deletePost(Long id);
 }

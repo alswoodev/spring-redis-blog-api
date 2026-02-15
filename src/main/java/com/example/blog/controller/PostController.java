@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/posts")
@@ -34,10 +35,9 @@ public class PostController {
         // Validate that the user exists and retrieve user information
         UserDTO memberInfo = userService.getUserInfo(userId);
 
-        // Authorization check: ensure the logged-in user is the owner of the post
-        if ( postDTO.getUserId() != memberInfo.getId() ) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "해당 게시글을 등록할 수 없는 유저");
-
-        postService.register(userId, postDTO);
+        try{postService.register(memberInfo.getId(), postDTO);}
+        catch(IllegalArgumentException e){return ResponseEntity.badRequest()
+            .body(new CommonResponse<PostDTO>(HttpStatus.BAD_REQUEST, "FAIL", "registerPost", postDTO));}
 
         return ResponseEntity.ok(new CommonResponse<PostDTO>(HttpStatus.OK, "SUCCESS", "registerPost", postDTO));
     }
@@ -48,14 +48,20 @@ public class PostController {
         // Validate that the user exists and retrieve user information
         UserDTO memberInfo = userService.getUserInfo(userId);
 
-        List<PostDTO> postDTOList = postService.findMyPosts(memberInfo.getId());
-        
-        return ResponseEntity.ok(new CommonResponse<List<PostDTO>>(HttpStatus.OK, "SUCCESS", "myPostInfo", postDTOList));
+        try{ 
+            List<PostDTO> postDTOList = postService.findMyPosts(memberInfo.getId());
+            return ResponseEntity.ok(new CommonResponse<List<PostDTO>>(HttpStatus.OK, "SUCCESS", "myPostInfo", postDTOList));
+        }
+        catch(IllegalArgumentException e){
+            return ResponseEntity.badRequest()
+                .body(new CommonResponse<List<PostDTO>>(HttpStatus.BAD_REQUEST, "SUCCESS", "myPostInfo", null));
+        }
     }
 
     @GetMapping("{postId}")
     public ResponseEntity<CommonResponse<PostDTO>> getPostDetail(@PathVariable Long postId){
         PostDTO post = postService.getPostDetail(postId);
+        if (post == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         return ResponseEntity.ok(new CommonResponse<PostDTO>(HttpStatus.OK, "SUCCESS", "getPostDetail", post));
     }
 
@@ -68,10 +74,15 @@ public class PostController {
         UserDTO memberInfo = userService.getUserInfo(userId);
 
         // Authorization check: ensure the logged-in user is the owner of the post
-        if ( postDTO.getUserId() != memberInfo.getId() ) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "해당 게시글을 수정할 수 없는 유저");
+        if (!Objects.equals(postDTO.getUserId(), memberInfo.getId())) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "해당 게시글을 수정할 수 없는 유저");
         
         // Request validation: ensure the post ID in the request body matches the path variable
-        if ( postDTO.getId() != postId ) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Post ID in request body does not match path variable.");
+        if (!Objects.equals(postDTO.getId(),postId)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Post ID in request body does not match path variable.");
+
+        try{postService.updatePost(postDTO);} 
+        catch(IllegalArgumentException e) {return ResponseEntity.badRequest()
+            .body(new CommonResponse<PostDTO>(HttpStatus.BAD_REQUEST, "FAIL", "updatePost", postDTO)); }
+
         return ResponseEntity.ok(new CommonResponse<PostDTO>(HttpStatus.OK, "SUCCESS", "updatePost", postDTO));
 
     }
@@ -85,11 +96,15 @@ public class PostController {
         UserDTO memberInfo = userService.getUserInfo(userId);
 
         // Authorization check: ensure the logged-in user is the owner of the post
-        if ( request.getUserId() != memberInfo.getId() ) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "해당 게시글을 삭제할 수 없는 유저");
+        if (!Objects.equals(request.getUserId(), memberInfo.getId())) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "해당 게시글을 삭제할 수 없는 유저");
         
         // Request validation: ensure the post ID in the request body matches the path variable
-        if ( request.getPostId() != postId ) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Post ID in request body does not match path variable.");
-        postService.deletePost(postId);
+        if (!Objects.equals(request.getPostId(),postId)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Post ID in request body does not match path variable.");
+        
+        try{postService.deletePost(postId);} 
+        catch(IllegalArgumentException e) {return ResponseEntity.badRequest()
+            .body(new CommonResponse<PostDeleteRequest>(HttpStatus.BAD_REQUEST, "FAIL", "updatePost", request)); }
+
         return ResponseEntity.ok(new CommonResponse<>(HttpStatus.OK, "SUCCESS", "deletePost", request));
     }
 

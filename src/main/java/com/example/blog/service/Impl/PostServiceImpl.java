@@ -10,7 +10,6 @@ import com.example.blog.service.PostService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,7 +40,7 @@ public class PostServiceImpl implements PostService {
             postMapper.insertPost(postDTO);
         } else {
             log.error("Failed to load user {}", userId);
-            throw new RuntimeException("Failed to load user\n" + "Params : " + userId+ postDTO);
+            throw new IllegalArgumentException("Failed to load user\n" + "Params : " + userId+ postDTO);
         }
 
         // Attach files
@@ -54,7 +53,7 @@ public class PostServiceImpl implements PostService {
         if(userId != null && userId != 0) return postMapper.findAllByUserId(userId);
         else{
             log.error("find Post ERROR! Invalid userId {}", userId);
-            throw new RuntimeException("find Post ERROR! Invalid userId" + "Param : "+userId);
+            throw new IllegalArgumentException("find Post ERROR! Invalid userId" + "Param : "+userId);
         }
     }
 
@@ -63,7 +62,7 @@ public class PostServiceImpl implements PostService {
         if(id != null && id != 0) return postMapper.getPost(id);
         else{
             log.error("get Post ERROR! Invalid postId {}", id);
-            throw new RuntimeException("get Post ERROR! Invalid postId\n" + "Param : " + id);
+            throw new IllegalArgumentException("get Post ERROR! Invalid postId\n" + "Param : " + id);
         }
     }
 
@@ -71,23 +70,25 @@ public class PostServiceImpl implements PostService {
     @Transactional
     public void updatePost(PostDTO postDTO) {
         if (postDTO != null && postDTO.getId() != 0 && postDTO.getUserId() != 0) {
-            postMapper.updatePost(postDTO);
+            int count = postMapper.updatePost(postDTO);
+            if (count != 1) throw new IllegalArgumentException("Failed to update post : " + postDTO);
             // Update files table (1:N)
             updateFiles(postDTO);
         } else {
             log.error("update Post ERROR! {}", postDTO);
-            throw new RuntimeException("update Post ERROR! 물품 변경 메서드를 확인해주세요\n" + "Params : " + postDTO);
+            throw new IllegalArgumentException("update Post ERROR! 물품 변경 메서드를 확인해주세요\n" + "Params : " + postDTO);
         }
     }
 
     @Override
     public void deletePost(Long id) {
         if (id != 0) {
-            postMapper.deletePost(id);
+            int count = postMapper.deletePost(id);
+            if(count != 1) throw new IllegalArgumentException("Failed to delete post id : " + id);
             // Files will be deleted automatically via cascade
         } else {
             log.error("delete Post ERROR! {}", id);
-            throw new RuntimeException("update Post ERROR! 물품 삭제 메서드를 확인해주세요\n" + "Params : " + id);
+            throw new IllegalArgumentException("update Post ERROR! 물품 삭제 메서드를 확인해주세요\n" + "Params : " + id);
         }
     }
 
@@ -98,10 +99,18 @@ public class PostServiceImpl implements PostService {
             // Assign the postId to each FileDTO and persist them
             files.stream()
                 .peek(file -> file.setPostId(postId))
-                .forEach(fileMapper::insertFile);
-        } catch (DataAccessException e){
+                .forEach(file -> {
+                        int result = fileMapper.insertFile(file);
+                        if (result != 1) {
+                            throw new IllegalArgumentException("Failed to insert file: " + file);
+                        }
+                    });
+        } catch(IllegalArgumentException e){
+            throw e;
+        }
+        catch (RuntimeException e){
             log.error("Attach Files ERROR! {}", files);
-            throw new IllegalArgumentException("Invalid Files for Post" + files + e.getMessage());
+            throw new IllegalStateException("Invalid Files for Post" + files + e.getMessage());
         }
     }
 
@@ -115,15 +124,19 @@ public class PostServiceImpl implements PostService {
         List<FileDTO> existingFiles = fileMapper.findByPostId(postId);
 
         // If currentFiles is null (not an empty list), treat it as invalid input and skip processing
-        if (currentFiles == null) return;
+        if (currentFiles == null) throw new IllegalArgumentException("Files field is null");
         try {
             // * Delete removed files
             // Remove files that exist in DB but are no longer present in the updated DTO
             // (Comparison is based on equals/hashCode - value-based comparison)
             existingFiles.stream()
                 .filter(file -> !currentFiles.contains(file))  // Select existingFiles that currentFiles don't have
-                .map(FileDTO::getId)
-                .forEach(fileMapper::deleteFile); 
+                .forEach(file -> {
+                        int result = fileMapper.deleteFile(file.getId());
+                        if (result != 1) {
+                            throw new IllegalArgumentException("Failed to delete file: " + file);
+                        }
+                    }); 
 
             // * Insert newly added files
             // Add files that are present in the updated DTO but not yet stored in DB
@@ -131,10 +144,18 @@ public class PostServiceImpl implements PostService {
             currentFiles.stream()
                     .filter(file -> !existingFiles.contains(file)) // Select currentFiles that existingFiles don't have
                     .peek(file -> file.setPostId(postId))
-                    .forEach(fileMapper::insertFile);
-        } catch (DataAccessException e) {
+                    .forEach(file -> {
+                        int result = fileMapper.insertFile(file);
+                        if (result != 1) {
+                            throw new IllegalArgumentException("Failed to insert file: " + file);
+                        }
+                    });
+        } catch (IllegalArgumentException e){
+            throw e;
+        } 
+        catch (RuntimeException e) {
             log.error("Update Files ERROR! {}", currentFiles);
-            throw new IllegalArgumentException("Invalid Files for Post" + currentFiles + e.getMessage());
+            throw new IllegalStateException("Invalid Files for Post" + currentFiles + e.getMessage());
         }
     }
 }

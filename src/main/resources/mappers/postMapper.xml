@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.blog.mapper.PostMapper">
+
+    <insert id="insertPost" parameterType="com.example.blog.dto.PostDTO" 
+                                useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO posts (name, is_admin, contents, views, category_id, user_id, create_time, update_time )
+        VALUES (#{name}, #{isAdmin}, #{contents}, #{views}, #{categoryId}, #{userId}, #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="findAllByUserId" resultType="com.example.blog.dto.PostDTO">
+        SELECT id,
+               name,
+               is_admin,
+               contents,
+               create_time,
+               views,
+               category_id,
+               user_id,
+               update_time
+        FROM posts
+        WHERE user_id = #{userId}
+    </select>
+
+    <select id="getPost" resultMap="PostWithFilesResultMap">
+        SELECT 
+            p.id AS post_id,
+            p.user_id,
+            p.category_id,
+            p.name,
+            p.contents,
+            p.is_admin,
+            p.views,
+            p.create_time,
+            p.update_time,
+            f.id as file_id,
+            f.name AS file_name,
+            f.path AS file_path,
+            f.extension AS file_extension,
+            f.create_time as file_create_time
+        FROM posts p
+        LEFT JOIN files f ON p.id = f.post_id
+        WHERE p.id = #{id}
+    </select>
+
+    <resultMap id="PostWithFilesResultMap" type="com.example.blog.dto.PostDTO">
+        <id property="id" column="post_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="name" column="name"/>
+        <result property="contents" column="contents"/>
+        <result property="isAdmin" column="is_admin"/>
+        <result property="views" column="views"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+
+        <collection property="files" ofType="com.example.blog.dto.FileDTO">
+            <id property="id" column="file_id"/>
+            <result property="name" column="file_name"/>
+            <result property="path" column="file_path"/>
+            <result property="extension" column="file_extension"/>
+            <result property="createTime" column="file_create_time"/>
+            <result property="postId" column="post_id"/>
+        </collection>
+    </resultMap>
+
+    <update id="updatePost" parameterType="com.example.blog.dto.PostDTO">
+        UPDATE posts
+        SET name = #{name},
+            contents = #{contents},
+            views = #{views},
+            category_id = #{categoryId},
+            user_id = #{userId},
+            update_time = #{updateTime}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deletePost">
+        DELETE FROM posts
+        WHERE id = #{id}
+    </delete>
+
+</mapper>

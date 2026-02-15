@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.blog.mapper.FileMapper">
+
+    <insert id="insertFile" parameterType="com.example.blog.dto.FileDTO">
+        INSERT INTO files (path, name, extension, post_id, create_time)
+        VALUES (#{path}, #{name}, #{extension}, #{postId}, #{createTime})
+    </insert>
+
+    <select id="findByPostId" resultType="com.example.blog.dto.FileDTO">
+        SELECT id,
+               path,
+               name,
+               extension,
+               post_id AS postId,
+               create_time AS createTime
+        FROM files
+        WHERE post_id = #{postId}
+    </select>
+
+    <delete id="deleteFile">
+        DELETE FROM files
+        WHERE id = #{id}
+    </delete>
+
+</mapper>

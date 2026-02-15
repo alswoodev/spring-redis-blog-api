@@ -12,13 +12,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.mockito.*;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -32,14 +30,13 @@ import java.util.Date;
 @WebMvcTest(UserController.class)
 class UserControllerTest {
 
+    @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
     private UserService userService;
 
-    @InjectMocks
-    private UserController userController;
-
+    @Autowired
     private ObjectMapper objectMapper;
 
     private UserDTO userDTO;
@@ -47,14 +44,6 @@ class UserControllerTest {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
-        objectMapper = new ObjectMapper();
-
-        // standalone setup
-        mockMvc = MockMvcBuilders
-                .standaloneSetup(userController)
-                .build();
-
         userDTO = new UserDTO();
         userDTO.setUserId("testUser");
         userDTO.setPassword("password123");

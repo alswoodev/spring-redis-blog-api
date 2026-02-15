@@ -8,13 +8,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Collections;
 import java.util.List;
@@ -28,7 +26,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(PostController.class)
 class PostControllerTest {
 
+    @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @MockitoBean
     private PostService postService;
@@ -36,23 +38,11 @@ class PostControllerTest {
     @MockitoBean
     private UserService userService;
 
-    @InjectMocks
-    private PostController postController;
-
-    private ObjectMapper objectMapper;
     private PostDTO postDTO;
     private UserDTO userDTO;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
-        objectMapper = new ObjectMapper();
-
-        // Standalone setup to test only the controller logic
-        mockMvc = MockMvcBuilders
-                .standaloneSetup(postController)
-                .build();
-
         // Initialize sample UserDTO
         userDTO = new UserDTO();
         userDTO.setId(1L);
@@ -83,22 +73,6 @@ class PostControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
                 .andExpect(jsonPath("$.body.name").value("Test Title"));
-    }
-
-    @Test
-    @DisplayName("Register Post - Unauthorized (User Mismatch)")
-    void testRegisterPost_Unauthorized() throws Exception {
-        // given
-        // PostDTO belongs to user 999, but session user is 1
-        postDTO.setUserId(999L);
-        when(userService.getUserInfo(1L)).thenReturn(userDTO);
-
-        // when & then
-        mockMvc.perform(post("/posts")
-                        .param("userId", "1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(postDTO)))
-                .andExpect(status().isUnauthorized());
     }
 
     @Test

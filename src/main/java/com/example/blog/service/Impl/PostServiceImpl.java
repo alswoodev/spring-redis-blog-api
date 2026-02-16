@@ -8,11 +8,16 @@ import com.example.blog.mapper.PostMapper;
 import com.example.blog.mapper.UserMapper;
 import com.example.blog.service.PostService;
 import lombok.extern.log4j.Log4j2;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 @Service
 @Log4j2
@@ -42,7 +47,7 @@ public class PostServiceImpl implements PostService {
         }
 
         // Attach files
-        attachFiles(postDTO);
+        addAdditional(postDTO.getId(), postDTO.getFiles(), FileDTO::setPostId, fileMapper::insertFile);
     }
 
     // This method doesn't have detail information (e.g. files)
@@ -71,7 +76,9 @@ public class PostServiceImpl implements PostService {
             int count = postMapper.updatePost(postDTO);
             if (count != 1) throw new IllegalArgumentException("Failed to update post : " + postDTO);
             // Update files table (1:N)
-            updateFiles(postDTO);
+            Long id = postDTO.getId();
+            updateAdditional(id, fileMapper.findByPostId(id), postDTO.getFiles(), 
+            FileDTO::setPostId, FileDTO::getId, fileMapper::insertFile, fileMapper::deleteFile);
         } else {
             log.error("update Post ERROR! {}", postDTO);
             throw new IllegalArgumentException("update Post ERROR! 물품 변경 메서드를 확인해주세요\n" + "Params : " + postDTO);
@@ -91,69 +98,74 @@ public class PostServiceImpl implements PostService {
     }
 
     public void attachFiles(PostDTO postDTO){
-        Long postId = postDTO.getId();
-        List<FileDTO> files = postDTO.getFiles();
+        addAdditional(postDTO.getId(), postDTO.getFiles(), FileDTO::setPostId, fileMapper::insertFile);
+    }
+
+    public void updateFiles(PostDTO postDTO){
+        updateAdditional(postDTO.getId(), fileMapper.findByPostId(postDTO.getId()), postDTO.getFiles(), 
+            FileDTO::setPostId, FileDTO::getId, fileMapper::insertFile, fileMapper::deleteFile);
+    }
+
+    public <T> void addAdditional(Long postId, List<T> items,BiConsumer<T, Long> postIdSetter, Function<T, Integer> insertFunction) {
         try{
             // Assign the postId to each FileDTO and persist them
-            files.stream()
-                .peek(file -> file.setPostId(postId))
-                .forEach(file -> {
-                        int result = fileMapper.insertFile(file);
+            items.stream()
+                .peek(item -> postIdSetter.accept(item, postId))
+                .forEach(item -> {
+                        int result = insertFunction.apply(item);
                         if (result != 1) {
-                            throw new IllegalArgumentException("Failed to insert file: " + file);
+                            throw new IllegalArgumentException("Failed to insert item: " + item);
                         }
                     });
         } catch(IllegalArgumentException e){
             throw e;
         }
         catch (RuntimeException e){
-            log.error("Attach Files ERROR! {}", files);
-            throw new IllegalStateException("Invalid Files for Post" + files + e.getMessage());
+            log.error("Attach Additional Items ERROR! {}", items);
+            throw new IllegalStateException("Invalid Additional Items for Post" + items + e.getMessage());
         }
     }
 
-    // PostDTO must contain a valid post ID before updating files
-    public void updateFiles(PostDTO postDTO){
-        Long postId = postDTO.getId();
-        if(postId == null || postId == 0) throw new IllegalArgumentException("PostID is required to update files");
-        // Remaining files
-        List<FileDTO> currentFiles = postDTO.getFiles();
-
-        List<FileDTO> existingFiles = fileMapper.findByPostId(postId);
-
-        // If currentFiles is null (not an empty list), treat it as invalid input and skip processing
-        if (currentFiles == null) throw new IllegalArgumentException("Files field is null");
+    public <T, ID> void updateAdditional(Long postId, List<T> oldItems, List<T> newItems, 
+            BiConsumer<T, Long> postIdSetter, 
+            Function<T, ID> itemIdGetter,
+            Function<T, Integer> insertFunction, 
+            Function<ID, Integer> deleteFunction) {
         try {
-            // * Delete removed files
-            // Remove files that exist in DB but are no longer present in the updated DTO
+            // Convert lists to sets for efficient lookup
+            Set<T> oldSet = new HashSet<>(oldItems);
+            Set<T> newSet = new HashSet<>(newItems);
+
+            // * Delete removed items
+            // Remove items that exist in DB but are no longer present in the updated DTO
             // (Comparison is based on equals/hashCode - value-based comparison)
-            existingFiles.stream()
-                .filter(file -> !currentFiles.contains(file))  // Select existingFiles that currentFiles don't have
-                .forEach(file -> {
-                        int result = fileMapper.deleteFile(file.getId());
+            oldItems.stream()
+                .filter(oldItem -> !newSet.contains(oldItem))  // Select oldItems that newItems don't have
+                .forEach(oldItem -> {
+                        int result = deleteFunction.apply(itemIdGetter.apply(oldItem));
                         if (result != 1) {
-                            throw new IllegalArgumentException("Failed to delete file: " + file);
+                            throw new IllegalArgumentException("Failed to delete item: " + oldItem);
                         }
                     }); 
 
-            // * Insert newly added files
-            // Add files that are present in the updated DTO but not yet stored in DB
+            // * Insert newly added items
+            // Add items that are present in the updated DTO but not yet stored in DB
             // Set postId and creation time before inserting
-            currentFiles.stream()
-                    .filter(file -> !existingFiles.contains(file)) // Select currentFiles that existingFiles don't have
-                    .peek(file -> file.setPostId(postId))
-                    .forEach(file -> {
-                        int result = fileMapper.insertFile(file);
+            newItems.stream()
+                    .filter(newItem -> !oldSet.contains(newItem)) // Select newItems that oldItems don't have
+                    .peek(newItem -> postIdSetter.accept(newItem, postId))
+                    .forEach(newItem -> {
+                        int result = insertFunction.apply(newItem);
                         if (result != 1) {
-                            throw new IllegalArgumentException("Failed to insert file: " + file);
+                            throw new IllegalArgumentException("Failed to insert item: " + newItem);
                         }
                     });
         } catch (IllegalArgumentException e){
             throw e;
-        } 
+        }
         catch (RuntimeException e) {
-            log.error("Update Files ERROR! {}", currentFiles);
-            throw new IllegalStateException("Invalid Files for Post" + currentFiles + e.getMessage());
+            log.error("Update Additional Items ERROR! {}", newItems);
+            throw new IllegalStateException("Invalid Additional Items for Post" + newItems + e.getMessage());
         }
     }
 }

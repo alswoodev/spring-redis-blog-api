@@ -9,7 +9,6 @@ import com.example.blog.mapper.UserMapper;
 import com.example.blog.service.PostService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +27,6 @@ public class PostServiceImpl implements PostService {
     @Autowired
     private FileMapper fileMapper;
 
-    @CacheEvict(value="getProducts", allEntries = true)
     @Override
     public void register(Long userId, PostDTO postDTO) {
         // Validate userId

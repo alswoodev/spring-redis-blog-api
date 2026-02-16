@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.blog.mapper.CommentMapper">
+
+    <insert id="insertComment" parameterType="com.example.blog.dto.CommentDTO">
+        INSERT INTO comments (post_id, contents, user_id, sub_comment_id)
+        VALUES (#{postId}, #{contents}, #{userId}, #{subCommentId})
+    </insert>
+
+    <select id="findByPostId" resultType="com.example.blog.dto.CommentDTO">
+        SELECT id,
+               post_id AS postId,
+               contents,
+               user_id AS userId,
+               sub_comment_id AS subCommentId,
+               create_time AS createTime,
+               update_time AS updateTime
+        FROM comments
+        WHERE post_id = #{postId}
+    </select>
+
+    <update id="updateComment" parameterType="com.example.blog.dto.CommentDTO">
+        UPDATE comments
+        SET contents = #{contents},
+            sub_comment_id = #{subCommentId},
+            update_time = #{updateTime}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteComment">
+        DELETE FROM comments
+        WHERE id = #{id}
+    </delete>
+
+</mapper>

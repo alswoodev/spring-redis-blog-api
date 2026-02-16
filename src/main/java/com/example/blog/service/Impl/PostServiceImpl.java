@@ -1,9 +1,11 @@
 package com.example.blog.service.Impl;
 
+import com.example.blog.dto.CommentDTO;
 import com.example.blog.dto.FileDTO;
 import com.example.blog.dto.PostDTO;
 import com.example.blog.dto.TagDTO;
 import com.example.blog.dto.UserDTO;
+import com.example.blog.mapper.CommentMapper;
 import com.example.blog.mapper.FileMapper;
 import com.example.blog.mapper.PostMapper;
 import com.example.blog.mapper.TagMapper;
@@ -37,6 +39,9 @@ public class PostServiceImpl implements PostService {
 
     @Autowired
     private TagMapper tagMapper;
+
+    @Autowired
+    private CommentMapper commentMapper;
 
     @Override
     @Transactional
@@ -75,6 +80,7 @@ public class PostServiceImpl implements PostService {
             if(postDTO != null) {
                 postDTO.setFiles(fileMapper.findByPostId(id));
                 postDTO.setTags(tagMapper.findByPostId(id));
+                postDTO.setComments(commentMapper.findByPostId(id));
                 return postDTO;
             }
             else {
@@ -116,6 +122,30 @@ public class PostServiceImpl implements PostService {
             throw new IllegalArgumentException("update Post ERROR! 물품 삭제 메서드를 확인해주세요\n" + "Params : " + id);
         }
     }
+
+    @Override
+    public void registerComment(CommentDTO commentDTO){
+        if(commentDTO.getContents() == null || commentDTO.getContents().trim().isEmpty()) throw new IllegalArgumentException("빈 댓글은 등록할 수 없습니다.");
+        if(commentDTO.getContents().length() > 250) throw new IllegalArgumentException("댓글을 250자 이상 작성할 수 없습니다.");
+        commentMapper.insertComment(commentDTO);
+    }
+
+    @Override
+    public void updateComment(CommentDTO commentDTO){
+        if(commentDTO.getId() == null || commentDTO.getId().equals(0L)) throw new IllegalArgumentException("Invalid commentId");
+        if(commentDTO.getContents() == null || commentDTO.getContents().trim().isEmpty()) throw new IllegalArgumentException("빈 댓글은 수정할 수 없습니다.");
+        if(commentDTO.getContents().length() > 250) throw new IllegalArgumentException("댓글을 250자 이상 작성할 수 없습니다.");
+        commentDTO.setUpdateTime(new Date());
+        commentMapper.updateComment(commentDTO);
+    }
+
+    @Override
+    public void deleteComment(Long commentId){
+        if(commentId == null || commentId.equals(0L)) throw new IllegalArgumentException("Invalid commentId");
+        commentMapper.deleteComment(commentId);
+    }
+
+
 
     public void attachFiles(PostDTO postDTO){
         if(postDTO.getFiles() == null || postDTO.getFiles().isEmpty()) return; // No files to attach

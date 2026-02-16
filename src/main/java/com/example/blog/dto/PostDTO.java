@@ -28,7 +28,9 @@ public class PostDTO {
     // 1:N Mapping
     private List<FileDTO> files;
     private List<TagDTO> tags;
+    private List<CommentDTO> comments;
 
+    // Custom builder pattern for testing purposes
     public static class PostDTOBuilder {
         public PostDTOBuilder file(FileDTO file) {
             if (this.files == null) this.files = new ArrayList<>();
@@ -39,6 +41,12 @@ public class PostDTO {
         public PostDTOBuilder tag(TagDTO tag) {
             if (this.tags == null) this.tags = new ArrayList<>();
             this.tags.add(tag);
+            return this;
+        }
+
+        public PostDTOBuilder comment(CommentDTO comment) {
+            if (this.comments == null) this.comments = new ArrayList<>();
+            this.comments.add(comment);
             return this;
         }
     }

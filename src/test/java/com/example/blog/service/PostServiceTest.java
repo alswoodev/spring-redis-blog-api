@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.blog.dto.CommentDTO;
 import com.example.blog.dto.FileDTO;
 import com.example.blog.dto.PostDTO;
 import com.example.blog.dto.TagDTO;
@@ -122,5 +123,61 @@ public class PostServiceTest {
         //then
         assertThat(postService.findMyPosts(userId).size()).isEqualTo(0);
         assertThat(fileMapper.findByPostId(id).size()).isEqualTo(0);
+    }
+
+    @Test
+    void testRegisterComment(){
+        //given
+        Long postId = postService.findMyPosts(userId).get(0).getId();
+        CommentDTO commentDTO = CommentDTO.builder()
+            .contents("comment")
+            .postId(postId)
+            .userId(userId)
+            .build();
+
+        //when
+        postService.registerComment(commentDTO);
+
+        //then
+        assertThat(postService.getPostDetail(postId).getComments().size()).isEqualTo(1);
+    }
+
+    @Test
+    void testUpdateComment(){
+        //given
+        Long postId = postService.findMyPosts(userId).get(0).getId();
+        CommentDTO commentDTO = CommentDTO.builder()
+            .contents("comment")
+            .postId(postId)
+            .userId(userId)
+            .build();
+        postService.registerComment(commentDTO);
+
+        //when
+        CommentDTO savedComment = postService.getPostDetail(postId).getComments().get(0);
+        savedComment.setContents("updated comment");
+        postService.updateComment(savedComment);
+
+        //then
+        assertThat(postService.getPostDetail(postId).getComments().get(0).getContents()).isEqualTo("updated comment");
+    }
+
+    @Test
+    void testDeleteComment(){
+        //given
+        Long postId = postService.findMyPosts(userId).get(0).getId();
+        CommentDTO commentDTO = CommentDTO.builder()
+            .contents("comment")
+            .postId(postId)
+            .userId(userId)
+            .build();
+        postService.registerComment(commentDTO);
+        
+        //when
+        Long commentId = postService.getPostDetail(postId).getComments().get(0).getId();
+        postService.deleteComment(commentId);
+
+        //then
+        assertThat(postService.getPostDetail(postId).getComments().size()).isEqualTo(0);
     }
 }

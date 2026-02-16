@@ -1,0 +1,8 @@
+CREATE TABLE post_tag (
+    id BIGSERIAL PRIMARY KEY,
+    post_id BIGINT NOT NULL,
+    tag_id BIGINT,
+
+    CONSTRAINT fk_postId FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+    CONSTRAINT fk_tagId FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE SET NULL
+);

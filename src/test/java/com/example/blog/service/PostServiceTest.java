@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.blog.dto.FileDTO;
 import com.example.blog.dto.PostDTO;
+import com.example.blog.dto.TagDTO;
 import com.example.blog.dto.UserDTO;
 import com.example.blog.mapper.FileMapper;
 
@@ -53,6 +54,12 @@ public class PostServiceTest {
                         .name("image2")
                         .extension(".jpg")
                         .build())
+            .tag(TagDTO.builder()
+                        .name("tag1")
+                        .build())
+            .tag(TagDTO.builder()
+                        .name("tag2")
+                        .build())
             .build();
         
         postService.register(userId, postDTO); // Also test the attach logic
@@ -77,7 +84,8 @@ public class PostServiceTest {
         assertThat(postDTO.getName()).isEqualTo("title");
         assertThat(postDTO.getContents()).isEqualTo("contents");
         assertThat(postDTO.getUserId()).isEqualTo(userId);
-        assertThat(postDTO.getFiles().size()).isEqualTo(2);
+        assertThat(postDTO.getFiles().size()).isEqualTo(2); // attachFiles() test
+        assertThat(postDTO.getTags().size()).isEqualTo(2); // attachTags() test
     }
 
     // Also test the updateFiles logic
@@ -89,6 +97,7 @@ public class PostServiceTest {
         postDTO.setName("TITLE");
         postDTO.setContents("CONTENTS");
         postDTO.setFiles(Collections.singletonList(postDTO.getFiles().remove(1)));
+        postDTO.setTags(Collections.singletonList(postDTO.getTags().remove(1)));
 
         //when
         postService.updatePost(postDTO);
@@ -98,7 +107,8 @@ public class PostServiceTest {
         PostDTO post = postService.getPostDetail(postService.findMyPosts(userId).get(0).getId());
         assertThat(post.getName()).isEqualTo("TITLE");
         assertThat(post.getContents()).isEqualTo("CONTENTS");
-        assertThat(post.getFiles().size()).isEqualTo(1);
+        assertThat(post.getFiles().size()).isEqualTo(1); // updateFiles() test
+        assertThat(post.getTags().size()).isEqualTo(1); // updateTags() test
     }
 
     @Test

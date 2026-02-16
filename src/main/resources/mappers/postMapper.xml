@@ -14,58 +14,31 @@
     <select id="findAllByUserId" resultType="com.example.blog.dto.PostDTO">
         SELECT id,
                name,
-               is_admin,
+               is_admin AS isAdmin,
                contents,
-               create_time,
+               create_time AS createTime,
                views,
-               category_id,
-               user_id,
-               update_time
+               category_id AS categoryId,
+               user_id AS userId,
+               update_time AS updateTime
         FROM posts
         WHERE user_id = #{userId}
     </select>
 
-    <select id="getPost" resultMap="PostWithFilesResultMap">
+    <select id="getPost" resultType="com.example.blog.dto.PostDTO">
         SELECT 
-            p.id AS post_id,
-            p.user_id,
-            p.category_id,
-            p.name,
-            p.contents,
-            p.is_admin,
-            p.views,
-            p.create_time,
-            p.update_time,
-            f.id as file_id,
-            f.name AS file_name,
-            f.path AS file_path,
-            f.extension AS file_extension,
-            f.create_time as file_create_time
-        FROM posts p
-        LEFT JOIN files f ON p.id = f.post_id
-        WHERE p.id = #{id}
+            id,
+            user_id AS userId,
+            category_id AS categoryId,
+            name,
+            contents,
+            is_admin AS isAdmin,
+            views,
+            create_time AS createTime,
+            update_time AS updateTime
+        FROM posts
+        WHERE id = #{id}
     </select>
-
-    <resultMap id="PostWithFilesResultMap" type="com.example.blog.dto.PostDTO">
-        <id property="id" column="post_id"/>
-        <result property="userId" column="user_id"/>
-        <result property="categoryId" column="category_id"/>
-        <result property="name" column="name"/>
-        <result property="contents" column="contents"/>
-        <result property="isAdmin" column="is_admin"/>
-        <result property="views" column="views"/>
-        <result property="createTime" column="create_time"/>
-        <result property="updateTime" column="update_time"/>
-
-        <collection property="files" ofType="com.example.blog.dto.FileDTO">
-            <id property="id" column="file_id"/>
-            <result property="name" column="file_name"/>
-            <result property="path" column="file_path"/>
-            <result property="extension" column="file_extension"/>
-            <result property="createTime" column="file_create_time"/>
-            <result property="postId" column="post_id"/>
-        </collection>
-    </resultMap>
 
     <update id="updatePost" parameterType="com.example.blog.dto.PostDTO">
         UPDATE posts

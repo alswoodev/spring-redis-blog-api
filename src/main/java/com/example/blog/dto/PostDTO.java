@@ -27,11 +27,18 @@ public class PostDTO {
     
     // 1:N Mapping
     private List<FileDTO> files;
+    private List<TagDTO> tags;
 
     public static class PostDTOBuilder {
         public PostDTOBuilder file(FileDTO file) {
             if (this.files == null) this.files = new ArrayList<>();
             this.files.add(file);
+            return this;
+        }
+
+        public PostDTOBuilder tag(TagDTO tag) {
+            if (this.tags == null) this.tags = new ArrayList<>();
+            this.tags.add(tag);
             return this;
         }
     }

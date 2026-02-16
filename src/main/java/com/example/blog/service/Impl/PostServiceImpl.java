@@ -38,6 +38,7 @@ public class PostServiceImpl implements PostService {
     private TagMapper tagMapper;
 
     @Override
+    @Transactional
     public void register(Long userId, PostDTO postDTO) {
         // Validate userId
         UserDTO memberInfo = userProfileMapper.getUserProfile(userId);
@@ -45,7 +46,8 @@ public class PostServiceImpl implements PostService {
         if (memberInfo != null) {
             postDTO.setUserId(memberInfo.getId());
             if(PostDTO.hasNullData(postDTO) == true) throw new IllegalArgumentException("제목, 내용은 필수 입력값입니다.");
-            postMapper.insertPost(postDTO);
+            int count = postMapper.insertPost(postDTO);
+            if(count != 1) throw new IllegalArgumentException("Failed to register post : " + postDTO);
         } else {
             log.error("Failed to load user {}", userId);
             throw new IllegalArgumentException("Failed to load user\n" + "Params : " + userId+ postDTO);

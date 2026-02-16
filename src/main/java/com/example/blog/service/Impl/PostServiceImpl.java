@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -91,6 +92,8 @@ public class PostServiceImpl implements PostService {
     @Transactional
     public void updatePost(PostDTO postDTO) {
         if (postDTO != null && postDTO.getId() != 0 && postDTO.getUserId() != 0) {
+            if(PostDTO.hasNullData(postDTO) == true) throw new IllegalArgumentException("제목, 내용은 필수 입력값입니다.");
+            postDTO.setUpdateTime(new Date());
             int count = postMapper.updatePost(postDTO);
             if (count != 1) throw new IllegalArgumentException("Failed to update post : " + postDTO);
 

@@ -1,14 +1,14 @@
 package com.example.blog.controller;
 
 import com.example.blog.aop.LoginCheck;
-import com.example.blog.dto.CategoryDTO;
 import com.example.blog.service.CategoryService;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -17,7 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @RequestMapping("/categories")
 @RequiredArgsConstructor
-@Log4j2
+@Slf4j
 public class CategoryController {
 
     private final CategoryService categoryService;

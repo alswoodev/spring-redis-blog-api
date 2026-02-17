@@ -12,13 +12,11 @@ import com.example.blog.mapper.PostMapper;
 import com.example.blog.mapper.TagMapper;
 import com.example.blog.mapper.UserMapper;
 import com.example.blog.service.PostService;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -29,7 +27,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 @Service
-@Log4j2
+@Slf4j
 public class PostServiceImpl implements PostService {
 
     @Autowired

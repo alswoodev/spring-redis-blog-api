@@ -4,7 +4,7 @@ import com.example.blog.utils.SessionUtil;
 
 import jakarta.servlet.http.HttpSession;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -21,7 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Component
 @Aspect
 @Order(Ordered.LOWEST_PRECEDENCE)
-@Log4j2
+@Slf4j
 public class LoginCheckAspect {
     // Around Advice applies to methods matching the pointcut condition (@LoginCheck)
     // and binds relevant objects to the advice parameters:

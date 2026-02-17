@@ -2,13 +2,13 @@ package com.example.blog.service.Impl;
 
 import com.example.blog.mapper.CategoryMapper;
 import com.example.blog.service.CategoryService;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-@Log4j2
+@Slf4j
 public class CategoryServiceImpl implements CategoryService {
 
     @Autowired

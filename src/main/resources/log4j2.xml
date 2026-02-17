@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- 
+    Root configuration element for Log4j2.
+    The 'status' attribute controls Log4j2's internal logging level.
+-->
+<Configuration status="INFO">
+
+    <!-- 
+        Define reusable properties for this configuration file.
+        These properties can be referenced using ${PROPERTY_NAME}.
+    -->
+    <Properties>
+
+        <!-- 
+            Base name for the log file.
+            This value will be reused in fileName and filePattern.
+        -->
+        <Property name="LOG_NAME">Board-Server-log4j2</Property>
+
+        <!-- 
+            Log output pattern.
+            This pattern controls how each log line will be formatted.
+
+            %d{pattern}  -> Timestamp format
+            %p           -> Log level (INFO, DEBUG, etc.)
+            %C           -> Fully qualified class name
+            %t           -> Thread name
+            %m           -> Log message
+            %n           -> New line
+
+            %style{}     -> Applies ANSI color styling (mainly for console)
+            %highlight{} -> Highlights log level with different colors
+        -->
+        <Property name="LOG_PATTERN">
+            %style{%d{yyyy/MM/dd HH:mm:ss, SSS}}{cyan} 
+            %highlight{[%-5p]}{FATAL=bg_red, ERROR=red, INFO=green, DEBUG=blue} [%C] 
+            %style{[%t]}{yellow}- %m%n -
+        </Property>
+
+    </Properties>
+
+
+    <!-- 
+        Appenders define WHERE logs will be sent.
+        Each appender represents an output destination (console, file, DB, etc.).
+    -->
+    <Appenders>
+
+        <!-- 
+            Console Appender:
+            Outputs log messages to the standard output stream (SYSTEM_OUT).
+        -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </Console>
+
+
+        <!-- 
+            RollingFile Appender:
+            Writes logs to a file and automatically rotates (rolls over) the file based on policies.
+        -->
+        <RollingFile name="File"
+                     fileName="logs/${LOG_NAME}.log"
+                     filePattern="logs/${LOG_NAME}_%d{yyyy-MM-dd}_%i.log.gz">
+
+
+            <!-- Layout defines how the log entries are formatted inside the file. -->
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+
+
+            <!-- Policies define WHEN log rotation should occur. -->
+            <Policies>
+
+                <!-- 
+                    Time-based rotation:
+                    A new log file is created every 1 day.
+                -->
+                <TimeBasedTriggeringPolicy interval="1"/>
+
+                <!-- 
+                    Size-based rotation:
+                    If the log file exceeds 200KB, it will roll over. (much larger in production.)
+                -->
+                <SizeBasedTriggeringPolicy size="200KB"/>
+
+            </Policies>
+
+            <!-- 
+                Rollover strategy defines HOW old log files are managed.
+
+                max="10" -> Keep a maximum of 10 archived log files.
+                fileIndex="min" -> Use the minimum available index when rolling.
+            -->
+            <DefaultRolloverStrategy max="10" fileIndex="min"/>
+
+        </RollingFile>
+
+    </Appenders>
+
+
+    <!-- 
+        Loggers define WHICH logs are captured and at what level.
+        Loggers can be configured per package or per class.
+    -->
+    <Loggers>
+
+        <!-- 
+            Root Logger:
+            Default logger applied to all classes unless overridden.
+            Level INFO means only INFO, WARN, ERROR, FATAL will be logged.
+        -->
+        <Root level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+        </Root>
+
+        <Logger name="com.example.blog" level="DEBUG" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+    </Loggers>
+
+</Configuration>

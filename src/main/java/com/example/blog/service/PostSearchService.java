@@ -7,4 +7,6 @@ import com.example.blog.dto.request.PostSearchRequest;
 
 public interface PostSearchService {
     List<PostDTO> search(PostSearchRequest postSearchRequest);
+
+    List<PostDTO> searchByTagName(String tagName);
 }

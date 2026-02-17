@@ -27,4 +27,12 @@ public class PostSearchServiceImpl implements PostSearchService {
         catch(RuntimeException e){log.error("Fail to search. Param : "+ postSearchRequest +e.getMessage());}
         return null;
     }
+
+    @Cacheable(value = "postCache", key="'getPostsByTagName' + #tagName")
+    @Override
+    public List<PostDTO> searchByTagName(String tagName) {
+        try { return postSearchMapper.findPostsByTagName(tagName); }
+        catch(RuntimeException e){log.error("Fail to search. Param : "+ tagName + e.getMessage());}
+        return null;
+    }
 }

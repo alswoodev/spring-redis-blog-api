@@ -68,4 +68,22 @@
         </collection>
     </resultMap>
 
+    <select id="findPostsByTagName" parameterType="string" resultType="com.example.blog.dto.PostDTO">
+        SELECT 
+            p.id,
+            p.user_id as userId,
+            p.category_id as categoryId,
+            p.name,
+            p.contents,
+            p.is_admin AS isAdmin,
+            p.views,
+            p.create_time AS createTime,
+            p.update_time AS updateTime
+        FROM posts p
+        JOIN post_tag pt ON p.id = pt.post_id
+        JOIN tags t ON pt.tag_id = t.id
+        WHERE t.name = #{tagName}
+        ORDER BY p.create_time DESC
+    </select>
+
 </mapper>

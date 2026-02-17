@@ -10,4 +10,6 @@ import com.example.blog.dto.request.PostSearchRequest;
 @Mapper
 public interface PostSearchMapper {
     List<PostDTO> findAllByPostSearchRequest(PostSearchRequest postSearchRequest);
+
+    List<PostDTO> findPostsByTagName(String tagName);
 }

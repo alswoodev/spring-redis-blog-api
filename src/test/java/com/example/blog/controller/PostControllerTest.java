@@ -129,7 +129,7 @@ class PostControllerTest {
     void testDeletePost_Success() throws Exception {
         // given
         when(userService.getUserInfo(1L)).thenReturn(userDTO);
-        doNothing().when(postService).deletePost(100L);
+        doNothing().when(postService).deletePost(anyLong(), 100L);
 
         // Constructing JSON for PostDeleteRequest (private inner class)
         String requestBody = "{\"userId\":1, \"postId\":100}";
@@ -142,6 +142,6 @@ class PostControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("OK"));
 
-        verify(postService, times(1)).deletePost(100L);
+        verify(postService, times(1)).deletePost(anyLong(), 100L);
     }
 }

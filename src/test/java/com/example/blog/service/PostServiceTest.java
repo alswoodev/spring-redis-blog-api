@@ -101,7 +101,7 @@ public class PostServiceTest {
         postDTO.setTags(Collections.singletonList(postDTO.getTags().remove(1)));
 
         //when
-        postService.updatePost(postDTO);
+        postService.updatePost(userId, postDTO);
 
         //then
         assertThat(postService.findMyPosts(userId).size()).isEqualTo(1); // Ensure the total count remains the same 
@@ -118,7 +118,7 @@ public class PostServiceTest {
         Long id = postService.findMyPosts(userId).get(0).getId();
 
         //when
-        postService.deletePost(id);
+        postService.deletePost(userId, id);
 
         //then
         assertThat(postService.findMyPosts(userId).size()).isEqualTo(0);
@@ -156,7 +156,7 @@ public class PostServiceTest {
         //when
         CommentDTO savedComment = postService.getPostDetail(postId).getComments().get(0);
         savedComment.setContents("updated comment");
-        postService.updateComment(savedComment);
+        postService.updateComment(userId, savedComment);
 
         //then
         assertThat(postService.getPostDetail(postId).getComments().get(0).getContents()).isEqualTo("updated comment");
@@ -175,7 +175,7 @@ public class PostServiceTest {
         
         //when
         Long commentId = postService.getPostDetail(postId).getComments().get(0).getId();
-        postService.deleteComment(commentId);
+        postService.deleteComment(userId, commentId);
 
         //then
         assertThat(postService.getPostDetail(postId).getComments().size()).isEqualTo(0);

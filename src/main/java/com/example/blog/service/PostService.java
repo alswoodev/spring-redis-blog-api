@@ -19,6 +19,8 @@ public interface PostService {
 
     void registerComment(CommentDTO commentDTO);
 
+    CommentDTO getCommentDetail(Long commentId);
+
     void updateComment(CommentDTO commentDTO);
 
     void deleteComment(Long commentId);

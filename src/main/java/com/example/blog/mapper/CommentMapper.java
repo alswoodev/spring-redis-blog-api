@@ -16,4 +16,6 @@ public interface CommentMapper {
     public int updateComment(CommentDTO commentDTO);
 
     public int deleteComment(@Param("id") Long id);
+
+    public CommentDTO getById(@Param("id") Long id);
 }

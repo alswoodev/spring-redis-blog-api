@@ -131,6 +131,19 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    public CommentDTO getCommentDetail(Long commentId){
+        if(commentId != null && !commentId.equals(0L)) {
+            CommentDTO commentDTO = commentMapper.getById(commentId);
+            if(commentDTO != null) return commentDTO;
+            else return null;
+        }
+        else{
+            log.error("get Comment ERROR! No commentId {}");
+            throw new IllegalArgumentException("get Comment ERROR! No commentId");
+        }
+    }
+
+    @Override
     public void updateComment(CommentDTO commentDTO){
         if(commentDTO.getId() == null || commentDTO.getId().equals(0L)) throw new IllegalArgumentException("Invalid commentId");
         if(commentDTO.getContents() == null || commentDTO.getContents().trim().isEmpty()) throw new IllegalArgumentException("빈 댓글은 수정할 수 없습니다.");

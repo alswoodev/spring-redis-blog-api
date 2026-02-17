@@ -10,6 +10,18 @@
         VALUES (#{postId}, #{contents}, #{userId}, #{subCommentId})
     </insert>
 
+    <select id="getById" resultType="com.example.blog.dto.CommentDTO">
+        SELECT id,
+               post_id AS postId,
+               contents,
+               user_id AS userId,
+               sub_comment_id AS subCommentId,
+               create_time AS createTime,
+               update_time AS updateTime
+        FROM comments
+        WHERE id = #{id}
+    </select>
+
     <select id="findByPostId" resultType="com.example.blog.dto.CommentDTO">
         SELECT id,
                post_id AS postId,

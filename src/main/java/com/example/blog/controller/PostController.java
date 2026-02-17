@@ -1,6 +1,7 @@
 package com.example.blog.controller;
 
 import com.example.blog.aop.LoginCheck;
+import com.example.blog.dto.CommentDTO;
 import com.example.blog.dto.PostDTO;
 import com.example.blog.dto.UserDTO;
 import com.example.blog.dto.response.CommonResponse;
@@ -54,7 +55,7 @@ public class PostController {
         }
         catch(IllegalArgumentException e){
             return ResponseEntity.badRequest()
-                .body(new CommonResponse<List<PostDTO>>(HttpStatus.BAD_REQUEST, "SUCCESS", "myPostInfo", null));
+                .body(new CommonResponse<List<PostDTO>>(HttpStatus.BAD_REQUEST, "FAIL", "myPostInfo", null));
         }
     }
 
@@ -108,6 +109,61 @@ public class PostController {
         return ResponseEntity.ok(new CommonResponse<>(HttpStatus.OK, "SUCCESS", "deletePost", request));
     }
 
+    @PostMapping("{postId}/comments")
+    @ResponseStatus()
+    @LoginCheck(type = LoginCheck.UserType.USER)
+    public ResponseEntity<CommonResponse<CommentDTO>> addComment(Long userId,
+                               @PathVariable Long postId,
+                               @RequestBody CommentDTO request) {
+        // Validate that the user exists and retrieve user information
+        UserDTO memberInfo = userService.getUserInfo(userId);
+        request.setUserId(memberInfo.getId());
+        request.setPostId(postId);
+        try{postService.registerComment(request);} 
+        catch(IllegalArgumentException e) {return ResponseEntity.badRequest()
+            .body(new CommonResponse<CommentDTO>(HttpStatus.BAD_REQUEST, "FAIL", "addComment", null)); }
+        return ResponseEntity.ok(new CommonResponse<CommentDTO>(HttpStatus.OK, "SUCCESS", "addComment", request));
+    }
+
+    @PatchMapping("{postId}/comments/{commentId}")
+    @LoginCheck(type = LoginCheck.UserType.USER)
+    public ResponseEntity<CommonResponse<CommentDTO>> updateComment(Long userId,
+                               @PathVariable Long postId,
+                               @PathVariable Long commentId,
+                               @RequestBody CommentDTO request) {
+        // Validate that the user exists and retrieve user information
+        UserDTO memberInfo = userService.getUserInfo(userId);
+        CommentDTO existingComment = postService.getCommentDetail(commentId);
+        if( existingComment == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 댓글을 찾을 수 없습니다.");
+
+        // Authorization check: ensure the logged-in user is the owner of the comment
+        if (!Objects.equals(memberInfo.getId(), existingComment.getUserId())) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "해당 댓글을 수정할 수 없는 유저");
+        
+        request.setUserId(memberInfo.getId());
+        request.setPostId(postId);
+        request.setId(commentId);
+        try{postService.updateComment(request);} 
+        catch(IllegalArgumentException e) {return ResponseEntity.badRequest()
+            .body(new CommonResponse<CommentDTO>(HttpStatus.BAD_REQUEST, "FAIL", "updateComment", null)); }
+        return ResponseEntity.ok(new CommonResponse<CommentDTO>(HttpStatus.OK, "SUCCESS", "updateComment", null));
+    }
+
+    @DeleteMapping("{postId}/comments/{commentId}")
+    @LoginCheck(type = LoginCheck.UserType.USER)
+    public ResponseEntity<CommonResponse<CommentDTO>> deleteComment(Long userId,
+                               @PathVariable Long postId,
+                               @PathVariable Long commentId) {
+        // Validate that the user exists and retrieve user information
+        UserDTO memberInfo = userService.getUserInfo(userId);
+        CommentDTO existingComment = postService.getCommentDetail(commentId);
+        if( existingComment == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 댓글을 찾을 수 없습니다.");
+
+        // Authorization check: ensure the logged-in user is the owner of the comment
+        if (!Objects.equals(memberInfo.getId(), existingComment.getUserId())) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "해당 댓글을 삭제할 수 없는 유저");
+
+        postService.deleteComment(commentId);
+        return ResponseEntity.ok(new CommonResponse<CommentDTO>(HttpStatus.OK, "SUCCESS", "deleteComment", null));
+    }
 
 
 

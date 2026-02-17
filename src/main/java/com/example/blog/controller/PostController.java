@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/posts")
@@ -36,10 +35,7 @@ public class PostController {
         // Validate that the user exists and retrieve user information
         UserDTO memberInfo = retreiveUser(userId);
 
-        try{postService.register(memberInfo.getId(), postDTO);}
-        catch(IllegalArgumentException e){return ResponseEntity.badRequest()
-            .body(new CommonResponse<PostDTO>(HttpStatus.BAD_REQUEST, "FAIL", "registerPost", postDTO));}
-
+        postService.register(memberInfo.getId(), postDTO);
         return ResponseEntity.ok(new CommonResponse<PostDTO>(HttpStatus.OK, "SUCCESS", "registerPost", postDTO));
     }
 
@@ -49,14 +45,8 @@ public class PostController {
         // Validate that the user exists and retrieve user information
         UserDTO memberInfo = retreiveUser(userId);
 
-        try{ 
-            List<PostDTO> postDTOList = postService.findMyPosts(memberInfo.getId());
-            return ResponseEntity.ok(new CommonResponse<List<PostDTO>>(HttpStatus.OK, "SUCCESS", "myPostInfo", postDTOList));
-        }
-        catch(IllegalArgumentException e){
-            return ResponseEntity.badRequest()
-                .body(new CommonResponse<List<PostDTO>>(HttpStatus.BAD_REQUEST, "FAIL", "myPostInfo", null));
-        }
+        List<PostDTO> postDTOList = postService.findMyPosts(memberInfo.getId());
+        return ResponseEntity.ok(new CommonResponse<List<PostDTO>>(HttpStatus.OK, "SUCCESS", "myPostInfo", postDTOList));
     }
 
     @GetMapping("{postId}")
@@ -73,10 +63,7 @@ public class PostController {
         // Validate that the user exists and retrieve user information
         UserDTO memberInfo = retreiveUser(userId);
 
-        try{postService.updatePost(memberInfo.getId(), postDTO);} 
-        catch(IllegalArgumentException e) {return ResponseEntity.badRequest()
-            .body(new CommonResponse<PostDTO>(HttpStatus.BAD_REQUEST, "FAIL", "updatePost", postDTO)); }
-
+        postService.updatePost(memberInfo.getId(), postDTO);
         return ResponseEntity.ok(new CommonResponse<PostDTO>(HttpStatus.OK, "SUCCESS", "updatePost", postDTO));
 
     }
@@ -87,10 +74,7 @@ public class PostController {
                                @PathVariable Long postId) {
         // Validate that the user exists and retrieve user information
         UserDTO memberInfo = retreiveUser(userId);
-        try{postService.deletePost(memberInfo.getId(), postId);} 
-        catch(IllegalArgumentException e) {return ResponseEntity.badRequest()
-            .body(new CommonResponse<PostDeleteRequest>(HttpStatus.BAD_REQUEST, "FAIL", "deletePost", null)); }
-
+        postService.deletePost(memberInfo.getId(), postId);
         return ResponseEntity.ok(new CommonResponse<>(HttpStatus.OK, "SUCCESS", "deletePost", null));
     }
 
@@ -104,9 +88,7 @@ public class PostController {
         UserDTO memberInfo = retreiveUser(userId);
         request.setUserId(memberInfo.getId());
         request.setPostId(postId);
-        try{postService.registerComment(request);} 
-        catch(IllegalArgumentException e) {return ResponseEntity.badRequest()
-            .body(new CommonResponse<CommentDTO>(HttpStatus.BAD_REQUEST, "FAIL", "addComment", null)); }
+        postService.registerComment(request);
         return ResponseEntity.ok(new CommonResponse<CommentDTO>(HttpStatus.OK, "SUCCESS", "addComment", request));
     }
 
@@ -121,9 +103,7 @@ public class PostController {
         request.setUserId(memberInfo.getId());
         request.setPostId(postId);
         request.setId(commentId);
-        try{postService.updateComment(userId, request);} 
-        catch(IllegalArgumentException e) {return ResponseEntity.badRequest()
-            .body(new CommonResponse<CommentDTO>(HttpStatus.BAD_REQUEST, "FAIL", "updateComment", null)); }
+        postService.updateComment(userId, request);
         return ResponseEntity.ok(new CommonResponse<CommentDTO>(HttpStatus.OK, "SUCCESS", "updateComment", null));
     }
 

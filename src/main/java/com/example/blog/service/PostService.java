@@ -13,15 +13,15 @@ public interface PostService {
 
     PostDTO getPostDetail(Long id);
 
-    void updatePost(PostDTO postDTO);
+    void updatePost(Long userId,PostDTO postDTO);
 
-    void deletePost(Long id);
+    void deletePost(Long userId, Long id);
 
     void registerComment(CommentDTO commentDTO);
 
     CommentDTO getCommentDetail(Long commentId);
 
-    void updateComment(CommentDTO commentDTO);
+    void updateComment(Long userId, CommentDTO commentDTO);
 
-    void deleteComment(Long commentId);
+    void deleteComment(Long userId, Long commentId);
 }

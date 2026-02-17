@@ -5,6 +5,7 @@ import com.example.blog.dto.FileDTO;
 import com.example.blog.dto.PostDTO;
 import com.example.blog.dto.TagDTO;
 import com.example.blog.dto.UserDTO;
+import com.example.blog.exception.UnauthorizedException;
 import com.example.blog.mapper.CommentMapper;
 import com.example.blog.mapper.FileMapper;
 import com.example.blog.mapper.PostMapper;
@@ -14,12 +15,15 @@ import com.example.blog.service.PostService;
 import lombok.extern.log4j.Log4j2;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -96,7 +100,9 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public void updatePost(PostDTO postDTO) {
+    public void updatePost(Long userId, PostDTO postDTO) {
+        if (!Objects.equals(userId, postDTO.getUserId())) throw new UnauthorizedException("해당 게시글을 수정할 수 없는 유저");
+
         if (postDTO != null && postDTO.getId() != 0 && postDTO.getUserId() != 0) {
             if(PostDTO.hasNullData(postDTO) == true) throw new IllegalArgumentException("제목, 내용은 필수 입력값입니다.");
             postDTO.setUpdateTime(new Date());
@@ -112,7 +118,13 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public void deletePost(Long id) {
+    public void deletePost(Long userId, Long id) {
+        PostDTO postDTO = postMapper.getPost(id);
+        if(postDTO == null) {
+            log.error("Can't find post with id {}", id);
+            throw new IllegalArgumentException("Can't find post with id" + "Param : " + id);
+        }
+        if (!Objects.equals(userId, postDTO.getUserId())) throw new UnauthorizedException("해당 게시글을 삭제할 수 없는 유저");
         if (id != 0) {
             int count = postMapper.deletePost(id);
             if(count != 1) throw new IllegalArgumentException("Failed to delete post id : " + id);
@@ -144,17 +156,23 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public void updateComment(CommentDTO commentDTO){
+    public void updateComment(Long userId, CommentDTO commentDTO){
         if(commentDTO.getId() == null || commentDTO.getId().equals(0L)) throw new IllegalArgumentException("Invalid commentId");
         if(commentDTO.getContents() == null || commentDTO.getContents().trim().isEmpty()) throw new IllegalArgumentException("빈 댓글은 수정할 수 없습니다.");
         if(commentDTO.getContents().length() > 250) throw new IllegalArgumentException("댓글을 250자 이상 작성할 수 없습니다.");
+        CommentDTO existingComment = commentMapper.getById(commentDTO.getId());
+        if(existingComment == null) throw new IllegalArgumentException("Can't find comment with id : " + commentDTO.getId());
+        if (!Objects.equals(userId, existingComment.getUserId())) throw new UnauthorizedException("해당 댓글을 수정할 수 없는 유저");
         commentDTO.setUpdateTime(new Date());
         commentMapper.updateComment(commentDTO);
     }
 
     @Override
-    public void deleteComment(Long commentId){
+    public void deleteComment(Long userId, Long commentId){
         if(commentId == null || commentId.equals(0L)) throw new IllegalArgumentException("Invalid commentId");
+        CommentDTO existingComment = commentMapper.getById(commentId);
+        if(existingComment == null) throw new IllegalArgumentException("Can't find comment with id : " + commentId);
+        if (!Objects.equals(userId, existingComment.getUserId())) throw new UnauthorizedException("해당 댓글을 삭제할 수 없는 유저");
         commentMapper.deleteComment(commentId);
     }
 

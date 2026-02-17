@@ -34,7 +34,7 @@ public class PostController {
     @LoginCheck(type = LoginCheck.UserType.USER)
     public ResponseEntity<CommonResponse<PostDTO>> registerPost(Long userId, @RequestBody PostDTO postDTO) {
         // Validate that the user exists and retrieve user information
-        UserDTO memberInfo = userService.getUserInfo(userId);
+        UserDTO memberInfo = retreiveUser(userId);
 
         try{postService.register(memberInfo.getId(), postDTO);}
         catch(IllegalArgumentException e){return ResponseEntity.badRequest()
@@ -47,7 +47,7 @@ public class PostController {
     @LoginCheck(type = LoginCheck.UserType.USER)
     public ResponseEntity<CommonResponse<List<PostDTO>>> myPostInfo(Long userId) {
         // Validate that the user exists and retrieve user information
-        UserDTO memberInfo = userService.getUserInfo(userId);
+        UserDTO memberInfo = retreiveUser(userId);
 
         try{ 
             List<PostDTO> postDTOList = postService.findMyPosts(memberInfo.getId());
@@ -66,21 +66,14 @@ public class PostController {
         return ResponseEntity.ok(new CommonResponse<PostDTO>(HttpStatus.OK, "SUCCESS", "getPostDetail", post));
     }
 
-    @PatchMapping("{postId}")
+    @PatchMapping
     @LoginCheck(type = LoginCheck.UserType.USER)
     public ResponseEntity<CommonResponse<PostDTO>> updatePosts(Long userId,
-                               @PathVariable Long postId,
                                @RequestBody PostDTO postDTO) {
         // Validate that the user exists and retrieve user information
-        UserDTO memberInfo = userService.getUserInfo(userId);
+        UserDTO memberInfo = retreiveUser(userId);
 
-        // Authorization check: ensure the logged-in user is the owner of the post
-        if (!Objects.equals(postDTO.getUserId(), memberInfo.getId())) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "해당 게시글을 수정할 수 없는 유저");
-        
-        // Request validation: ensure the post ID in the request body matches the path variable
-        if (!Objects.equals(postDTO.getId(),postId)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Post ID in request body does not match path variable.");
-
-        try{postService.updatePost(postDTO);} 
+        try{postService.updatePost(memberInfo.getId(), postDTO);} 
         catch(IllegalArgumentException e) {return ResponseEntity.badRequest()
             .body(new CommonResponse<PostDTO>(HttpStatus.BAD_REQUEST, "FAIL", "updatePost", postDTO)); }
 
@@ -91,22 +84,14 @@ public class PostController {
     @DeleteMapping("{postId}")
     @LoginCheck(type = LoginCheck.UserType.USER)
     public ResponseEntity<CommonResponse<PostDeleteRequest>> deleteposts(Long userId,
-                               @PathVariable Long postId,
-                               @RequestBody PostDeleteRequest request) {
+                               @PathVariable Long postId) {
         // Validate that the user exists and retrieve user information
-        UserDTO memberInfo = userService.getUserInfo(userId);
-
-        // Authorization check: ensure the logged-in user is the owner of the post
-        if (!Objects.equals(request.getUserId(), memberInfo.getId())) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "해당 게시글을 삭제할 수 없는 유저");
-        
-        // Request validation: ensure the post ID in the request body matches the path variable
-        if (!Objects.equals(request.getPostId(),postId)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Post ID in request body does not match path variable.");
-        
-        try{postService.deletePost(postId);} 
+        UserDTO memberInfo = retreiveUser(userId);
+        try{postService.deletePost(memberInfo.getId(), postId);} 
         catch(IllegalArgumentException e) {return ResponseEntity.badRequest()
-            .body(new CommonResponse<PostDeleteRequest>(HttpStatus.BAD_REQUEST, "FAIL", "updatePost", request)); }
+            .body(new CommonResponse<PostDeleteRequest>(HttpStatus.BAD_REQUEST, "FAIL", "deletePost", null)); }
 
-        return ResponseEntity.ok(new CommonResponse<>(HttpStatus.OK, "SUCCESS", "deletePost", request));
+        return ResponseEntity.ok(new CommonResponse<>(HttpStatus.OK, "SUCCESS", "deletePost", null));
     }
 
     @PostMapping("{postId}/comments")
@@ -116,7 +101,7 @@ public class PostController {
                                @PathVariable Long postId,
                                @RequestBody CommentDTO request) {
         // Validate that the user exists and retrieve user information
-        UserDTO memberInfo = userService.getUserInfo(userId);
+        UserDTO memberInfo = retreiveUser(userId);
         request.setUserId(memberInfo.getId());
         request.setPostId(postId);
         try{postService.registerComment(request);} 
@@ -132,17 +117,11 @@ public class PostController {
                                @PathVariable Long commentId,
                                @RequestBody CommentDTO request) {
         // Validate that the user exists and retrieve user information
-        UserDTO memberInfo = userService.getUserInfo(userId);
-        CommentDTO existingComment = postService.getCommentDetail(commentId);
-        if( existingComment == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 댓글을 찾을 수 없습니다.");
-
-        // Authorization check: ensure the logged-in user is the owner of the comment
-        if (!Objects.equals(memberInfo.getId(), existingComment.getUserId())) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "해당 댓글을 수정할 수 없는 유저");
-        
+        UserDTO memberInfo = retreiveUser(userId);
         request.setUserId(memberInfo.getId());
         request.setPostId(postId);
         request.setId(commentId);
-        try{postService.updateComment(request);} 
+        try{postService.updateComment(userId, request);} 
         catch(IllegalArgumentException e) {return ResponseEntity.badRequest()
             .body(new CommonResponse<CommentDTO>(HttpStatus.BAD_REQUEST, "FAIL", "updateComment", null)); }
         return ResponseEntity.ok(new CommonResponse<CommentDTO>(HttpStatus.OK, "SUCCESS", "updateComment", null));
@@ -154,18 +133,17 @@ public class PostController {
                                @PathVariable Long postId,
                                @PathVariable Long commentId) {
         // Validate that the user exists and retrieve user information
-        UserDTO memberInfo = userService.getUserInfo(userId);
-        CommentDTO existingComment = postService.getCommentDetail(commentId);
-        if( existingComment == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 댓글을 찾을 수 없습니다.");
-
-        // Authorization check: ensure the logged-in user is the owner of the comment
-        if (!Objects.equals(memberInfo.getId(), existingComment.getUserId())) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "해당 댓글을 삭제할 수 없는 유저");
-
-        postService.deleteComment(commentId);
+        UserDTO memberInfo = retreiveUser(userId);
+        postService.deleteComment(memberInfo.getId(), commentId);
         return ResponseEntity.ok(new CommonResponse<CommentDTO>(HttpStatus.OK, "SUCCESS", "deleteComment", null));
     }
 
 
+    private UserDTO retreiveUser(Long userId) {
+        UserDTO memberInfo = userService.getUserInfo(userId);
+        if (memberInfo == null) throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "User information could not be retrieved.");
+        return memberInfo;
+    }
 
     // -------------- response 객체 --------------
 

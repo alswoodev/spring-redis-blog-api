@@ -1,7 +1,7 @@
 package com.example.blog.service.Impl;
 
 import com.example.blog.dto.UserDTO;
-import com.example.blog.exception.DuplicateIdException;
+import com.example.blog.exception.InvalidParameterException;
 import com.example.blog.mapper.UserMapper;
 import com.example.blog.service.UserService;
 import com.example.blog.utils.SHA256Util;
@@ -29,7 +29,7 @@ public class UserServiceImpl implements UserService {
         // Duplicate check
         boolean duplIdResult = isDuplicatedId(userDTO.getUserId());
         if (duplIdResult) {
-            throw new DuplicateIdException("중복된 아이디입니다.");
+            throw new InvalidParameterException("userId", com.example.blog.code.UserCode.USER_ALREADY_EXISTS);
         }
 
         // Hashing password
@@ -57,12 +57,15 @@ public class UserServiceImpl implements UserService {
         String cryptoPassword = SHA256Util.encryptSHA256(password);
 
         UserDTO memberInfo = userProfileMapper.findByUserIdAndPassword(userId, cryptoPassword);
+        if(memberInfo == null) throw new InvalidParameterException("password", com.example.blog.code.UserCode.INCORRECT_PASSWORD);
         return memberInfo;
     }
 
     @Override
     public UserDTO getUserInfo(Long id) {
-        return userProfileMapper.getUserProfile(id);
+        UserDTO memberInfo = userProfileMapper.getUserProfile(id);
+        if(memberInfo == null) throw new InvalidParameterException("id", com.example.blog.code.UserCode.USER_NOT_FOUND);
+        return memberInfo;
     }
 
     @Override
@@ -70,6 +73,7 @@ public class UserServiceImpl implements UserService {
         // Hash the input before password
         String cryptoPassword = SHA256Util.encryptSHA256(beforePassword);
         UserDTO memberInfo = userProfileMapper.getUserProfile(id);
+        if(memberInfo == null) throw new InvalidParameterException("id", com.example.blog.code.UserCode.USER_NOT_FOUND);
 
         // Find the user if the previous password is correct
         if (Objects.equals(memberInfo.getPassword(), cryptoPassword)) {
@@ -82,10 +86,7 @@ public class UserServiceImpl implements UserService {
                         "updateUser ERROR! \n" + "Params : " + memberInfo);
             }
         } else {
-            log.error("Invalid password ERROR! {}", memberInfo);
-            throw new IllegalArgumentException("Invalid passwrod ERROR! 비밀번호 변경 메서드를 확인해주세요\n" + "Params : " + memberInfo
-                + "new password" + cryptoPassword
-            );
+            throw new InvalidParameterException("password", com.example.blog.code.UserCode.INCORRECT_PASSWORD);
         }
     }
 
@@ -94,13 +95,18 @@ public class UserServiceImpl implements UserService {
         // Hash the input password
         String cryptoPassword = SHA256Util.encryptSHA256(password);
         UserDTO memberInfo = userProfileMapper.getUserProfile(id);
+        if (memberInfo == null) throw new InvalidParameterException("id", com.example.blog.code.UserCode.USER_NOT_FOUND);
 
         // Find the user if the password is correct
         if (Objects.equals(memberInfo.getPassword(), cryptoPassword)) {
-            userProfileMapper.deleteUserProfile(id);
+            int count = userProfileMapper.deleteUserProfile(id);
+            if (count != 1) {
+                log.error("deleteUser ERROR! {}", memberInfo);
+                throw new RuntimeException(
+                        "deleteUser ERROR! \n" + "Params : " + memberInfo);
+            }
         } else {
-            log.error("Invalid password ERROR! {}", memberInfo);
-            throw new RuntimeException("Invalid password ERROR! id 삭제 메서드를 확인해주세요\n" + "Params : " + memberInfo);
+            throw new InvalidParameterException("password", com.example.blog.code.UserCode.INCORRECT_PASSWORD);
         }
     }
 }

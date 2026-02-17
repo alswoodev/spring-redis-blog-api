@@ -6,7 +6,6 @@ import com.example.blog.dto.request.UserDeleteId;
 import com.example.blog.dto.request.UserLoginRequest;
 import com.example.blog.dto.request.UserUpdatePasswordRequest;
 import com.example.blog.dto.response.LoginResponse;
-import com.example.blog.exception.DuplicateIdException;
 import com.example.blog.service.UserService;
 import com.example.blog.utils.SessionUtil;
 
@@ -36,11 +35,7 @@ public class UserController {
         }
 
         // Register user
-        try {
-            userService.register(userDTO);
-        } catch (DuplicateIdException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+        userService.register(userDTO);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
@@ -48,11 +43,6 @@ public class UserController {
     public ResponseEntity<LoginResponse> login(@RequestBody UserLoginRequest request, 
                                              HttpSession session) {
         UserDTO userInfo = userService.login(request.getUserId(), request.getPassword());
-        
-        // If user doesn't exist
-        if(userInfo == null){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
 
         // Separate session logic for admin and regular user
         if (userInfo.getStatus() == UserDTO.Status.ADMIN) {
@@ -64,8 +54,8 @@ public class UserController {
         return new ResponseEntity<>(LoginResponse.success(userInfo), HttpStatus.OK);
     }
 
-     @GetMapping("my-info")
-     @LoginCheck(type = LoginCheck.UserType.USER)
+    @GetMapping("my-info")
+    @LoginCheck(type = LoginCheck.UserType.USER)
     public ResponseEntity<UserDTO> memberInfo(Long id, HttpSession session) {
         // Get admin user's id if login check is failed
         if (id == null) id = SessionUtil.getLoginAdminId(session);
@@ -83,12 +73,7 @@ public class UserController {
         // Unauthorized check via @LoginCheck annotation
 
         // Update password
-        try{
-            userService.updatePassword(id, request.getBeforePassword(), request.getAfterPassword());
-        }catch(IllegalArgumentException e){
-            log.error("Fail to update password", e);
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+        userService.updatePassword(id, request.getBeforePassword(), request.getAfterPassword());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -99,12 +84,7 @@ public class UserController {
         // Unauthorized check via @LoginCheck annotation
 
         // Delete user from DB
-        try {
-            userService.deleteId(id, userDeleteId.getPassword());
-        } catch (RuntimeException e) {
-            log.error("Fail to delete user", e);
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+        userService.deleteId(id, userDeleteId.getPassword());
         // Remove session
         try {
             SessionUtil.clear(session);

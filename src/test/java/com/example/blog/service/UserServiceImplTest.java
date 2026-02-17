@@ -3,6 +3,7 @@ package com.example.blog.service;
 import com.example.blog.dto.UserDTO;
 import com.example.blog.dto.UserDTO.Status;
 import com.example.blog.exception.DuplicateIdException;
+import com.example.blog.exception.InvalidParameterException;
 import com.example.blog.utils.SHA256Util;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -56,8 +57,8 @@ public class UserServiceImplTest {
 
         //when & then
         assertThatThrownBy(() -> userService.register(duplicateUser))
-                .isInstanceOf(DuplicateIdException.class)
-                .hasMessageContaining("중복된 아이디입니다.");
+                .isInstanceOf(InvalidParameterException.class)
+                .hasMessageContaining("user.already.exists");
     }
 
     @Test
@@ -75,13 +76,10 @@ public class UserServiceImplTest {
 
     @Test
     void loginWithWrongPasswordReturnsNull() {
-        //when
-        // Attempt login with incorrect password
-        UserDTO loginUser = userService.login("testuser", "wrongpassword");
-
-        //then
-        // Fail to login (return null)
-        assertThat(loginUser).isNull();
+        //when & then
+        assertThatThrownBy(() -> userService.login("testuser", "wrongpassword"))
+                .isInstanceOf(InvalidParameterException.class)
+                .hasMessageContaining("incorrect.password");
     }
 
     @Test
@@ -92,7 +90,9 @@ public class UserServiceImplTest {
 
         //then
         // Fail to login with before password
-        assertThat(userService.login("testuser", "password123")).isNull();
+        assertThatThrownBy(() -> userService.login("testuser", "password123"))
+                .isInstanceOf(InvalidParameterException.class)
+                .hasMessageContaining("incorrect.password");
         // Success to login with changed password
         assertThat(userService.login("testuser", "newpassword123")).isNotNull();
     }
@@ -102,8 +102,8 @@ public class UserServiceImplTest {
         //when & then
         // Attempt to change password with incorrect before password
         assertThatThrownBy(() -> userService.updatePassword(id, "wrongpassword", "newpassword"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Invalid passwrod ERROR");
+                .isInstanceOf(InvalidParameterException.class)
+                .hasMessageContaining("incorrect.password");
     }
 
     @Test
@@ -114,7 +114,9 @@ public class UserServiceImplTest {
 
         //then
         // Deleted user can no longer be found
-        assertThat(userService.getUserInfo(id)).isNull();
+        assertThatThrownBy(() -> userService.getUserInfo(id))
+                .isInstanceOf(InvalidParameterException.class)
+                .hasMessageContaining("user.not.found");
     }
 
     @Test
@@ -122,7 +124,7 @@ public class UserServiceImplTest {
         //when & then
         // Attempt to delete user with incorrect password
         assertThatThrownBy(() -> userService.deleteId(id, "wrongpassword"))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Invalid password ERROR");
+                .isInstanceOf(InvalidParameterException.class)
+                .hasMessageContaining("incorrect.password");
     }
 }

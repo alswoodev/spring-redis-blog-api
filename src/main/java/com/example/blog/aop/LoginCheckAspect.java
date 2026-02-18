@@ -1,5 +1,6 @@
 package com.example.blog.aop;
 
+import com.example.blog.exception.UnauthorizedException;
 import com.example.blog.utils.SessionUtil;
 
 import jakarta.servlet.http.HttpSession;
@@ -56,7 +57,7 @@ public class LoginCheckAspect {
         if (id == null) {
             log.debug(proceedingJoinPoint.toString()+ "accountName :" + id);
             // If session ID is null, skip controller and return 401 Unauthorized
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인한 id값을 확인해주세요.") {};
+            throw new UnauthorizedException("로그인이 필요합니다.");
         }
 
         Object[] modifiedArgs = proceedingJoinPoint.getArgs();

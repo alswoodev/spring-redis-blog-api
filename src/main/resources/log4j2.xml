@@ -115,8 +115,9 @@
             <AppenderRef ref="File"/>
         </Root>
 
-        <Logger name="com.example.blog" level="DEBUG" additivity="false">
+        <Logger name="com.example.blog" level="INFO" additivity="false">
             <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
         </Logger>
 
     </Loggers>

@@ -4,9 +4,11 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.example.blog.exception.InvalidParameterException;
+import com.example.blog.service.SlackService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,6 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LoggingThrownException {
     
+    @Autowired
+    SlackService slackService;
+
     @Pointcut("execution(* com.example..service..*(..))")
     public void serviceMethods() {}
 
@@ -39,8 +44,17 @@ public class LoggingThrownException {
             throw ex;
         } catch (RuntimeException ex){
             String exceptionMessage = ex.getMessage();
-            log.error("{} in [{}] method: {} with parameters: {}. ExceptionKey: {}",
-                            ex.getClass().getName(), className, methodName, sb.toString().trim(), exceptionMessage);
+            String errorMessage = String.format(
+                    "%s in [%s] method: %s with parameters: %s. ExceptionKey: %s",
+                    ex.getClass().getName(),
+                    className,
+                    methodName,
+                    sb.toString().trim(),
+                    exceptionMessage
+            );
+
+            log.error(errorMessage);
+            slackService.sendMessage(errorMessage);
             throw ex;
         }
     }

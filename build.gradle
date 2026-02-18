@@ -39,6 +39,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-aop'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'org.springframework.boot:spring-boot-starter-log4j2'
+	implementation 'com.slack.api:slack-api-client:1.47.0'
+
+	implementation 'io.github.cdimascio:dotenv-java:3.0.0'
 
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }

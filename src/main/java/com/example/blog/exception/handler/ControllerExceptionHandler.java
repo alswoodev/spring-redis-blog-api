@@ -28,8 +28,8 @@ public class ControllerExceptionHandler {
     }
 
     @ExceptionHandler({InvalidParameterException.class})
-    public ResponseEntity<Object> handleInvalidParameterException(InvalidParameterException e) {
-        String message = messageSource.getMessage(e.getCode().getMessageKey(), null, Locale.getDefault());
+    public ResponseEntity<Object> handleInvalidParameterException(InvalidParameterException e, Locale locale) {
+        String message = messageSource.getMessage(e.getCode().getMessageKey(), null, locale);
         CommonResponse<?> response = new CommonResponse<Object>(HttpStatus.BAD_REQUEST, "INVALID_PARAMETER", message, null);
         return ResponseEntity.badRequest().body(response);
     }

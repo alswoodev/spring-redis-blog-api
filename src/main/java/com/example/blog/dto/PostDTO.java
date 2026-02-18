@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.example.blog.code.PostCode;
+import com.example.blog.exception.InvalidParameterException;
+
 @Builder
 @Getter
 @Setter
@@ -52,7 +55,8 @@ public class PostDTO {
     }
 
     public static boolean hasNullData(PostDTO postDTO){
-        if( postDTO.getName() == null || postDTO.getContents() == null || postDTO.getUserId() == null ) return true;
-        else return false;
+        if( postDTO.getName() == null || postDTO.getName().trim() == "") throw new InvalidParameterException("name", PostCode.POST_NO_TITLE);
+        if( postDTO.getUserId() == null ) throw new InvalidParameterException("userId", PostCode.POST_NO_WRITER);
+        return false;
     }
 }

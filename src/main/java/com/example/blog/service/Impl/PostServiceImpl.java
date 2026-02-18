@@ -1,10 +1,13 @@
 package com.example.blog.service.Impl;
 
+import com.example.blog.code.PostCode;
+import com.example.blog.code.UserCode;
 import com.example.blog.dto.CommentDTO;
 import com.example.blog.dto.FileDTO;
 import com.example.blog.dto.PostDTO;
 import com.example.blog.dto.TagDTO;
 import com.example.blog.dto.UserDTO;
+import com.example.blog.exception.InvalidParameterException;
 import com.example.blog.exception.UnauthorizedException;
 import com.example.blog.mapper.CommentMapper;
 import com.example.blog.mapper.FileMapper;
@@ -53,16 +56,16 @@ public class PostServiceImpl implements PostService {
 
         if (memberInfo != null) {
             postDTO.setUserId(memberInfo.getId());
-            if(PostDTO.hasNullData(postDTO) == true) throw new IllegalArgumentException("제목, 내용은 필수 입력값입니다.");
+            PostDTO.hasNullData(postDTO);
             int count = postMapper.insertPost(postDTO);
-            if(count != 1) throw new IllegalArgumentException("Failed to register post : " + postDTO);
+            if(count != 1) throw new RuntimeException("게시글 등록 중 오류가 발생했습니다.");
         } else {
             log.error("Failed to load user {}", userId);
-            throw new IllegalArgumentException("Failed to load user\n" + "Params : " + userId+ postDTO);
+            throw new InvalidParameterException("id", UserCode.USER_NOT_FOUND);
         }
 
         attachFiles(postDTO); // Attach files 
-        attachTags(postDTO); // Attach tags   
+        attachTags(postDTO); // Attach tags
     }
 
     // This method doesn't have detail information (e.g. files)
@@ -70,8 +73,8 @@ public class PostServiceImpl implements PostService {
     public List<PostDTO> findMyPosts(Long userId) {
         if(userId != null && userId != 0) return postMapper.findAllByUserId(userId);
         else{
-            log.error("find Post ERROR! Invalid userId {}", userId);
-            throw new IllegalArgumentException("find Post ERROR! Invalid userId" + "Param : "+userId);
+            log.error("Failed to load user {}", userId);
+            throw new InvalidParameterException("id", UserCode.USER_NOT_FOUND);
         }
     }
 
@@ -87,12 +90,12 @@ public class PostServiceImpl implements PostService {
             }
             else {
                 log.error("get Post ERROR! Invalid postId {}", id);
-                throw new IllegalArgumentException("get Post ERROR! Invalid postId\n" + "Param : " + id);
+                throw new InvalidParameterException("id", PostCode.POST_NOT_FOUND);
             }
         }
         else{
-            log.error("get Post ERROR! No postId {}");
-            throw new IllegalArgumentException("get Post ERROR! No postId");
+            log.error("get Post ERROR! Invalid postId {}", id);
+            throw new InvalidParameterException("id", PostCode.POST_NOT_FOUND);
         }
     }
 
@@ -102,16 +105,16 @@ public class PostServiceImpl implements PostService {
         if (!Objects.equals(userId, postDTO.getUserId())) throw new UnauthorizedException("해당 게시글을 수정할 수 없는 유저");
 
         if (postDTO != null && postDTO.getId() != 0 && postDTO.getUserId() != 0) {
-            if(PostDTO.hasNullData(postDTO) == true) throw new IllegalArgumentException("제목, 내용은 필수 입력값입니다.");
+            PostDTO.hasNullData(postDTO);
             postDTO.setUpdateTime(new Date());
             int count = postMapper.updatePost(postDTO);
-            if (count != 1) throw new IllegalArgumentException("Failed to update post : " + postDTO);
+            if (count != 1) throw new RuntimeException("게시글 수정중 오류가 발생했습니다.");
 
             updateFiles(postDTO); // Update files
             updateTags(postDTO); // Update tags
         } else {
-            log.error("update Post ERROR! {}", postDTO);
-            throw new IllegalArgumentException("update Post ERROR! 물품 변경 메서드를 확인해주세요\n" + "Params : " + postDTO);
+            log.error("get Post ERROR! Invalid postId {}", postDTO.getId());
+            throw new InvalidParameterException("id", PostCode.POST_NOT_FOUND);
         }
     }
 
@@ -119,24 +122,20 @@ public class PostServiceImpl implements PostService {
     public void deletePost(Long userId, Long id) {
         PostDTO postDTO = postMapper.getPost(id);
         if(postDTO == null) {
-            log.error("Can't find post with id {}", id);
-            throw new IllegalArgumentException("Can't find post with id" + "Param : " + id);
+            log.error("get Post ERROR! Invalid postId {}", id);
+            throw new InvalidParameterException("id", PostCode.POST_NOT_FOUND);
         }
         if (!Objects.equals(userId, postDTO.getUserId())) throw new UnauthorizedException("해당 게시글을 삭제할 수 없는 유저");
-        if (id != 0) {
-            int count = postMapper.deletePost(id);
-            if(count != 1) throw new IllegalArgumentException("Failed to delete post id : " + id);
-            // Files will be deleted automatically via cascade
-        } else {
-            log.error("delete Post ERROR! {}", id);
-            throw new IllegalArgumentException("update Post ERROR! 물품 삭제 메서드를 확인해주세요\n" + "Params : " + id);
-        }
+        
+        int count = postMapper.deletePost(id);
+        if(count != 1) throw new RuntimeException("게시글 삭제중 오류가 발생했습니다.");
+        // Files will be deleted automatically via cascade
     }
 
     @Override
     public void registerComment(CommentDTO commentDTO){
-        if(commentDTO.getContents() == null || commentDTO.getContents().trim().isEmpty()) throw new IllegalArgumentException("빈 댓글은 등록할 수 없습니다.");
-        if(commentDTO.getContents().length() > 250) throw new IllegalArgumentException("댓글을 250자 이상 작성할 수 없습니다.");
+        if(commentDTO.getContents() == null || commentDTO.getContents().trim().isEmpty()) throw new InvalidParameterException("contents", PostCode.COMMENT_EMPTY);
+        if(commentDTO.getContents().length() > 250) throw new InvalidParameterException("contents", PostCode.COMMENT_TOO_LONG);
         commentMapper.insertComment(commentDTO);
     }
 
@@ -148,18 +147,18 @@ public class PostServiceImpl implements PostService {
             else return null;
         }
         else{
-            log.error("get Comment ERROR! No commentId {}");
-            throw new IllegalArgumentException("get Comment ERROR! No commentId");
+            log.error("get Comment ERROR! No commentId {}", commentId);
+            throw new InvalidParameterException("id", PostCode.COMMENT_NOT_FOUND);
         }
     }
 
     @Override
     public void updateComment(Long userId, CommentDTO commentDTO){
-        if(commentDTO.getId() == null || commentDTO.getId().equals(0L)) throw new IllegalArgumentException("Invalid commentId");
-        if(commentDTO.getContents() == null || commentDTO.getContents().trim().isEmpty()) throw new IllegalArgumentException("빈 댓글은 수정할 수 없습니다.");
-        if(commentDTO.getContents().length() > 250) throw new IllegalArgumentException("댓글을 250자 이상 작성할 수 없습니다.");
+        if(commentDTO.getId() == null || commentDTO.getId().equals(0L)) throw new InvalidParameterException("id", PostCode.COMMENT_NOT_FOUND);
+        if(commentDTO.getContents() == null || commentDTO.getContents().trim().isEmpty()) throw new InvalidParameterException("contents", PostCode.COMMENT_EMPTY);
+        if(commentDTO.getContents().length() > 250) throw new InvalidParameterException("contents", PostCode.COMMENT_TOO_LONG);
         CommentDTO existingComment = commentMapper.getById(commentDTO.getId());
-        if(existingComment == null) throw new IllegalArgumentException("Can't find comment with id : " + commentDTO.getId());
+        if(existingComment == null) throw new InvalidParameterException("id", PostCode.COMMENT_NOT_FOUND);
         if (!Objects.equals(userId, existingComment.getUserId())) throw new UnauthorizedException("해당 댓글을 수정할 수 없는 유저");
         commentDTO.setUpdateTime(new Date());
         commentMapper.updateComment(commentDTO);
@@ -167,31 +166,37 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void deleteComment(Long userId, Long commentId){
-        if(commentId == null || commentId.equals(0L)) throw new IllegalArgumentException("Invalid commentId");
+        if(commentId == null || commentId.equals(0L)) throw new InvalidParameterException("id", PostCode.COMMENT_NOT_FOUND);
         CommentDTO existingComment = commentMapper.getById(commentId);
-        if(existingComment == null) throw new IllegalArgumentException("Can't find comment with id : " + commentId);
+        if(existingComment == null) throw new InvalidParameterException("id", PostCode.COMMENT_NOT_FOUND);
         if (!Objects.equals(userId, existingComment.getUserId())) throw new UnauthorizedException("해당 댓글을 삭제할 수 없는 유저");
         commentMapper.deleteComment(commentId);
     }
 
-
+    public void validateFile(FileDTO fileDTO){
+        if(fileDTO.getPath() == null || fileDTO.getPath().trim() == "") throw new InvalidParameterException("path", PostCode.FILE_NO_URL);
+        if(fileDTO.getName() == null || fileDTO.getName().trim() == "") throw new InvalidParameterException("name", PostCode.FILE_NO_NAME);
+        if(fileDTO.getExtension() == null || fileDTO.getExtension().trim() == "") throw new InvalidParameterException("extension", PostCode.FILE_NO_EXTENSION);
+    }
 
     public void attachFiles(PostDTO postDTO){
         if(postDTO.getFiles() == null || postDTO.getFiles().isEmpty()) return; // No files to attach
+        postDTO.getFiles().forEach(file -> validateFile(file));
         addAdditional(postDTO.getId(), postDTO.getFiles(), FileDTO::setPostId, fileMapper::insertFile);
     }
 
     public void updateFiles(PostDTO postDTO){
         if(postDTO.getFiles() == null) return; // If files field is null, we assume that the files don't need to be updated.
+        postDTO.getFiles().forEach(file -> validateFile(file));
         updateAdditional(postDTO.getId(), fileMapper.findByPostId(postDTO.getId()), postDTO.getFiles(), 
             FileDTO::setPostId, FileDTO::getId, fileMapper::insertFile, fileMapper::deleteFile);
     }
 
     public void addTag(TagDTO tagDTO){
-        if(tagDTO.getName() == null || tagDTO.getName().trim().isEmpty()) throw new IllegalArgumentException("Tag name should not be empty");
-        if(tagDTO.getName().length() < 2) throw new IllegalArgumentException("Tag name should be at least 2 characters");
-        if(tagDTO.getName().length() > 40) throw new IllegalArgumentException("Tag name should be less than 40 characters");
-        if(tagDTO.getName().contains(" ")) throw new IllegalArgumentException("Tag name should not contain spaces");
+        if(tagDTO.getName() == null || tagDTO.getName().trim().isEmpty()) throw new InvalidParameterException("name", PostCode.TAG_NO_NAME);
+        if(tagDTO.getName().length() < 2) throw new InvalidParameterException("name", PostCode.TAG_TOO_SHORT);
+        if(tagDTO.getName().length() > 40) throw new InvalidParameterException("name", PostCode.TAG_TOO_LONG);
+        if(tagDTO.getName().contains(" ")) throw new InvalidParameterException("name", PostCode.TAG_NO_SPACE);
         // Check if the tag already exists in the tags table to prevent duplicates
         TagDTO existingTag = tagMapper.findByName(tagDTO.getName());
         if(existingTag == null) {
@@ -228,6 +233,7 @@ public class PostServiceImpl implements PostService {
     // * make sure to insert data into the main table first, then add data into the relation table
     // ----------------------------------------------------------
     public <T> void addAdditional(Long postId, List<T> items,BiConsumer<T, Long> postIdSetter, Function<T, Integer> insertFunction) {
+        if(postId == null || postId.equals(0L)) throw new InvalidParameterException("postId", PostCode.ADDITIONAL_NO_POST_ID);
         try{
             // Assign the postId to each FileDTO and persist them
             items.stream()
@@ -252,6 +258,7 @@ public class PostServiceImpl implements PostService {
             Function<T, ID> itemIdGetter,
             Function<T, Integer> insertFunction, 
             Function<ID, Integer> deleteFunction) {
+        if(postId == null || postId.equals(0L)) throw new InvalidParameterException("postId", PostCode.ADDITIONAL_NO_POST_ID);
         try {
             // Convert lists to sets for efficient lookup
             Set<T> oldSet = new HashSet<>(oldItems);

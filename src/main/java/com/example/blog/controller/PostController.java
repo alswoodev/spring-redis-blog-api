@@ -37,7 +37,7 @@ public class PostController {
         UserDTO memberInfo = retreiveUser(userId);
 
         postService.register(memberInfo.getId(), postDTO);
-        return ResponseEntity.ok(new CommonResponse<PostDTO>(HttpStatus.OK, "SUCCESS", "registerPost", postDTO));
+        return ResponseEntity.ok(new CommonResponse<PostDTO>(true, postDTO));
     }
 
     @GetMapping("my-posts")
@@ -47,14 +47,14 @@ public class PostController {
         UserDTO memberInfo = retreiveUser(userId);
 
         List<PostDTO> postDTOList = postService.findMyPosts(memberInfo.getId());
-        return ResponseEntity.ok(new CommonResponse<List<PostDTO>>(HttpStatus.OK, "SUCCESS", "myPostInfo", postDTOList));
+        return ResponseEntity.ok(new CommonResponse<List<PostDTO>>(true, postDTOList));
     }
 
     @GetMapping("{postId}")
     public ResponseEntity<CommonResponse<PostDTO>> getPostDetail(@PathVariable Long postId){
         PostDTO post = postService.getPostDetail(postId);
         if (post == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        return ResponseEntity.ok(new CommonResponse<PostDTO>(HttpStatus.OK, "SUCCESS", "getPostDetail", post));
+        return ResponseEntity.ok(new CommonResponse<PostDTO>(true, post));
     }
 
     @PatchMapping
@@ -65,7 +65,7 @@ public class PostController {
         UserDTO memberInfo = retreiveUser(userId);
 
         postService.updatePost(memberInfo.getId(), postDTO);
-        return ResponseEntity.ok(new CommonResponse<PostDTO>(HttpStatus.OK, "SUCCESS", "updatePost", postDTO));
+        return ResponseEntity.ok(new CommonResponse<PostDTO>(true, postDTO));
 
     }
 
@@ -76,7 +76,7 @@ public class PostController {
         // Validate that the user exists and retrieve user information
         UserDTO memberInfo = retreiveUser(userId);
         postService.deletePost(memberInfo.getId(), postId);
-        return ResponseEntity.ok(new CommonResponse<>(HttpStatus.OK, "SUCCESS", "deletePost", null));
+        return ResponseEntity.ok(new CommonResponse<>(true, null));
     }
 
     @PostMapping("{postId}/comments")
@@ -90,7 +90,7 @@ public class PostController {
         request.setUserId(memberInfo.getId());
         request.setPostId(postId);
         postService.registerComment(request);
-        return ResponseEntity.ok(new CommonResponse<CommentDTO>(HttpStatus.OK, "SUCCESS", "addComment", request));
+        return ResponseEntity.ok(new CommonResponse<CommentDTO>(true, request));
     }
 
     @PatchMapping("{postId}/comments/{commentId}")
@@ -105,7 +105,7 @@ public class PostController {
         request.setPostId(postId);
         request.setId(commentId);
         postService.updateComment(userId, request);
-        return ResponseEntity.ok(new CommonResponse<CommentDTO>(HttpStatus.OK, "SUCCESS", "updateComment", null));
+        return ResponseEntity.ok(new CommonResponse<CommentDTO>(true, null));
     }
 
     @DeleteMapping("{postId}/comments/{commentId}")
@@ -116,7 +116,7 @@ public class PostController {
         // Validate that the user exists and retrieve user information
         UserDTO memberInfo = retreiveUser(userId);
         postService.deleteComment(memberInfo.getId(), commentId);
-        return ResponseEntity.ok(new CommonResponse<CommentDTO>(HttpStatus.OK, "SUCCESS", "deleteComment", null));
+        return ResponseEntity.ok(new CommonResponse<CommentDTO>(true, null));
     }
 
 

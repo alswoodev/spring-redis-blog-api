@@ -5,7 +5,7 @@ import com.example.blog.dto.UserDTO;
 import com.example.blog.dto.request.UserDeleteId;
 import com.example.blog.dto.request.UserLoginRequest;
 import com.example.blog.dto.request.UserUpdatePasswordRequest;
-import com.example.blog.dto.response.LoginResponse;
+import com.example.blog.dto.response.CommonResponse;
 import com.example.blog.service.UserService;
 import com.example.blog.utils.SessionUtil;
 
@@ -28,7 +28,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/sign-up")
-    public ResponseEntity<Void> signUp(@RequestBody UserDTO userDTO) {
+    public ResponseEntity<?> signUp(@RequestBody UserDTO userDTO) {
         // Null validation
         if(UserDTO.hasNullDataBeforeSignup(userDTO)){
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -36,11 +36,11 @@ public class UserController {
 
         // Register user
         userService.register(userDTO);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new CommonResponse<>(true, userDTO.getId()));
     }
 
     @PostMapping("/sign-in")
-    public ResponseEntity<LoginResponse> login(@RequestBody UserLoginRequest request, 
+    public ResponseEntity<?> login(@RequestBody UserLoginRequest request, 
                                              HttpSession session) {
         UserDTO userInfo = userService.login(request.getUserId(), request.getPassword());
 
@@ -51,35 +51,35 @@ public class UserController {
             SessionUtil.setLoginMemberId(session, userInfo.getId());
         }
 
-        return new ResponseEntity<>(LoginResponse.success(userInfo), HttpStatus.OK);
+        return ResponseEntity.ok(new CommonResponse<>(true, userInfo.getId()));
     }
 
     @GetMapping("my-info")
     @LoginCheck(type = LoginCheck.UserType.USER)
-    public ResponseEntity<UserDTO> memberInfo(Long id, HttpSession session) {
+    public ResponseEntity<?> memberInfo(Long id, HttpSession session) {
         // Get admin user's id if login check is failed
         if (id == null) id = SessionUtil.getLoginAdminId(session);
 
         // Unauthorized check via @LoginCheck annotation
 
         UserDTO memberInfo = userService.getUserInfo(id);
-        return new ResponseEntity<>(memberInfo, HttpStatus.OK);
+        return ResponseEntity.ok(new CommonResponse<>(true, memberInfo.getId()));
     }
 
     @PatchMapping("password")
     @LoginCheck(type = LoginCheck.UserType.USER)
-    public ResponseEntity<Void> updateUserPassword(Long id, @RequestBody UserUpdatePasswordRequest request,
+    public ResponseEntity<?> updateUserPassword(Long id, @RequestBody UserUpdatePasswordRequest request,
                                         HttpSession session) {
         // Unauthorized check via @LoginCheck annotation
 
         // Update password
         userService.updatePassword(id, request.getBeforePassword(), request.getAfterPassword());
-        return new ResponseEntity<>(HttpStatus.OK);
+        return ResponseEntity.ok(new CommonResponse<>(true, null));
     }
 
     @DeleteMapping
     @LoginCheck(type = LoginCheck.UserType.USER)
-    public ResponseEntity<Void> deleteId(Long id, @RequestBody UserDeleteId userDeleteId,
+    public ResponseEntity<?> deleteId(Long id, @RequestBody UserDeleteId userDeleteId,
                                        HttpSession session) {
         // Unauthorized check via @LoginCheck annotation
 
@@ -93,7 +93,6 @@ public class UserController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        return new ResponseEntity<>(HttpStatus.OK);
-    
+        return ResponseEntity.ok(new CommonResponse<>(true, null));
     }
 }

@@ -3,13 +3,13 @@ package com.example.blog.dto.response;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CommonResponse<T> {
-
-    private boolean success;
-    private T data;
-    
+public class ErrorResponse {
+    private String error_code;
+    private String error_message;
 }

@@ -34,13 +34,13 @@ public class PostSearchController {
 
     @PostMapping
     public ResponseEntity<CommonResponse<PostSearchResponse>> search(@RequestBody PostSearchRequest request) {
-        try { return ResponseEntity.ok(new CommonResponse<PostSearchResponse>(HttpStatus.OK, "SUCCESS", "search", new PostSearchResponse(postSearchService.search(request))));}
+        try { return ResponseEntity.ok(new CommonResponse<PostSearchResponse>(true, new PostSearchResponse(postSearchService.search(request))));}
         catch(RuntimeException e){ throw new ResponseStatusException(HttpStatus.BAD_REQUEST);}
     }
 
     @GetMapping("/tag")
     public ResponseEntity<CommonResponse<PostSearchResponse>> searchByTagName(@RequestParam String name) {
-        try { return ResponseEntity.ok(new CommonResponse<PostSearchResponse>(HttpStatus.OK, "SUCCESS", "searchByTagName", new PostSearchResponse(postSearchService.searchByTagName(name))));}
+        try { return ResponseEntity.ok(new CommonResponse<PostSearchResponse>(true, new PostSearchResponse(postSearchService.searchByTagName(name))));}
         catch(RuntimeException e){ throw new ResponseStatusException(HttpStatus.BAD_REQUEST);}
     }
     

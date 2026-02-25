@@ -18,6 +18,7 @@ import com.example.blog.service.PostService;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,6 +48,9 @@ public class PostServiceImpl implements PostService {
 
     @Autowired
     private CommentMapper commentMapper;
+
+    @Autowired
+    private PostServiceCache postServiceCache;
 
     @Override
     @Transactional
@@ -79,20 +83,16 @@ public class PostServiceImpl implements PostService {
         }
     }
 
+
+    // To improve caching efficiency, split post information into writer-frequent (static) and reader-frequent (dynamic) parts.
+    // Only the static part is cached, since the dynamic part changes frequently.
+    // The dynamic part is retrieved separately after fetching the static part.
     @Override 
     public PostDTO getPostDetail(Long id){
         if(id != null && id != 0) {
-            PostDTO postDTO = postMapper.getPost(id);
-            if(postDTO != null) {
-                postDTO.setFiles(fileMapper.findByPostId(id));
-                postDTO.setTags(tagMapper.findByPostId(id));
-                postDTO.setComments(commentMapper.findByPostId(id));
-                return postDTO;
-            }
-            else {
-                log.error("get Post ERROR! Invalid postId {}", id);
-                throw new InvalidParameterException("id", PostCode.POST_NOT_FOUND);
-            }
+            PostDTO postDTO = postServiceCache.getStaticPost(id);
+            postDTO.setComments(commentMapper.findByPostId(id));
+            return postDTO;
         }
         else{
             log.error("get Post ERROR! Invalid postId {}", id);
@@ -100,6 +100,7 @@ public class PostServiceImpl implements PostService {
         }
     }
 
+    @CacheEvict(value = "postCache", key = "'getPost' + #postDTO.id")
     @Override
     @Transactional
     public void updatePost(Long userId, PostDTO postDTO) {
@@ -120,6 +121,7 @@ public class PostServiceImpl implements PostService {
         }
     }
 
+    @CacheEvict(value = "postCache", key = "'getPost' + #id")
     @Override
     public void deletePost(Long userId, Long id) {
         PostDTO postDTO = postMapper.getPost(id);
@@ -192,6 +194,7 @@ public class PostServiceImpl implements PostService {
         addAdditional(postDTO.getId(), postDTO.getFiles(), FileDTO::setPostId, fileMapper::insertFile);
     }
 
+    @CacheEvict(value = "postCache", key = "'getPost' + #postDTO.getId()")
     public void updateFiles(PostDTO postDTO){
         if(postDTO.getFiles() == null) return; // If files field is null, we assume that the files don't need to be updated.
         postDTO.getFiles().forEach(file -> validateFile(file));
@@ -220,6 +223,7 @@ public class PostServiceImpl implements PostService {
         addAdditional(postDTO.getId(), postDTO.getTags(), TagDTO::setPostId, tagMapper::insertPostTag);
     }
 
+    @CacheEvict(value = "postCache", key = "'getPost' + #postDTO.getId()")
     public void updateTags(PostDTO postDTO){
         if(postDTO.getTags() == null) return; // If tags field is null, we assume that the tags don't need to be updated.
         // Update tags table (N:M)

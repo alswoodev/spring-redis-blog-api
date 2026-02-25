@@ -6,6 +6,7 @@ build/
 !**/src/test/**/build/
 logs/
 .env
+__pycache__/
 
 ### STS ###
 .apt_generated

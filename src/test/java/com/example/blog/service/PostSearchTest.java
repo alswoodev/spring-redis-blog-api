@@ -33,10 +33,10 @@ public class PostSearchTest {
 
     @BeforeEach
     void setUp(){
-        UserDTO userDTO = new UserDTO();
-        userDTO.setUserId("test");
-        userDTO.setPassword("test");
-        userDTO.setNickname("test");
+        UserDTO userDTO = UserDTO.builder()
+                                .userId("test")
+                                .password("test")
+                                .nickname("test").build();
         userService.register(userDTO);
         userId = userService.login("test","test").getId();
 

@@ -1,9 +1,9 @@
 package com.example.blog.controller;
 
 import com.example.blog.dto.UserDTO;
-import com.example.blog.dto.request.UserDeleteId;
-import com.example.blog.dto.request.UserLoginRequest;
-import com.example.blog.dto.request.UserUpdatePasswordRequest;
+import com.example.blog.dto.request.user.UserDeleteId;
+import com.example.blog.dto.request.user.UserSignInRequest;
+import com.example.blog.dto.request.user.UserUpdatePasswordRequest;
 import com.example.blog.exception.DuplicateIdException;
 import com.example.blog.service.UserService;
 
@@ -40,19 +40,17 @@ class UserControllerTest {
     private ObjectMapper objectMapper;
 
     private UserDTO userDTO;
-    private UserLoginRequest loginRequest;
+    private UserSignInRequest loginRequest;
 
     @BeforeEach
     void setUp() {
-        userDTO = new UserDTO();
-        userDTO.setUserId("testUser");
-        userDTO.setPassword("password123");
-        userDTO.setNickname("TEST");
-        userDTO.setAdmin(false);
-        userDTO.setCreateTime(new Date());
-        userDTO.setStatus(UserDTO.Status.DEFAULT);
+        userDTO = UserDTO.builder()
+                        .userId("testUser")
+                        .password("password123")
+                        .nickname("TEST").build();
 
-        loginRequest = new UserLoginRequest();
+
+        loginRequest = new UserSignInRequest();
         loginRequest.setUserId("testUser");
         loginRequest.setPassword("password123");
     }

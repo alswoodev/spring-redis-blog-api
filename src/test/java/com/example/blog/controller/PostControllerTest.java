@@ -44,7 +44,12 @@ class PostControllerTest {
     @BeforeEach
     void setUp() {
         // Initialize sample UserDTO
-        userDTO = new UserDTO();
+        userDTO = UserDTO.builder()
+                        .id(1L)
+                        .userId("testUser")
+                        .password("password123").build();
+                        
+                                
         userDTO.setId(1L);
         userDTO.setUserId("testUser");
 

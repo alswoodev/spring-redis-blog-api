@@ -31,13 +31,10 @@ public class UserServiceImplTest {
     void setUp() {
         //given
         // Generate test user dto
-        testUser = new UserDTO();
-        testUser.setUserId("testuser");
-        testUser.setPassword("password123");
-        testUser.setNickname("테스터");
-        testUser.setStatus(Status.DEFAULT);
-        testUser.setCreateTime(new Date());
-        testUser.setAdmin(false);
+        testUser = UserDTO.builder()
+                .userId("testuser")
+                .password("password123")
+                .nickname("테스터").build();
 
         userService.register(testUser);
         id = userService.login("testuser", "password123").getId();
@@ -47,10 +44,10 @@ public class UserServiceImplTest {
     void registerDuplicateIdThrowsException() {
         //given
         // Use an already existing userId
-        UserDTO duplicateUser = new UserDTO();
-        duplicateUser.setUserId("testuser");
-        duplicateUser.setPassword("newpass");
-        duplicateUser.setNickname("중복테스터");
+        UserDTO duplicateUser = UserDTO.builder()
+                                    .userId("testuser")
+                                    .password("password123")
+                                    .nickname("중복테스터").build();
         duplicateUser.setStatus(Status.DEFAULT);
         duplicateUser.setCreateTime(new Date());
         duplicateUser.setAdmin(false);

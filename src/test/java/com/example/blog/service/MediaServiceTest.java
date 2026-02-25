@@ -48,13 +48,10 @@ public class MediaServiceTest {
 
     @BeforeEach
     void setUp() {
-        testUser = new UserDTO();
-        testUser.setUserId("testuser11");
-        testUser.setPassword("password123");
-        testUser.setNickname("테스터");
-        testUser.setStatus(Status.DEFAULT);
-        testUser.setCreateTime(new Date());
-        testUser.setAdmin(false);
+        testUser = UserDTO.builder()
+                        .userId("testuser11")
+                        .password("password123")
+                        .nickname("테스터").build();
 
         userService.register(testUser);
         id = userService.login("testuser", "password123").getId();

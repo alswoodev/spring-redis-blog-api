@@ -35,7 +35,10 @@ public class PostServiceTest {
 
     @BeforeEach
     void setUp(){
-        UserDTO userDTO = new UserDTO();
+        UserDTO userDTO = UserDTO.builder()
+                                .userId("test")
+                                .password("test")
+                                .nickname("test").build();
         userDTO.setUserId("test");
         userDTO.setPassword("test");
         userDTO.setNickname("test");

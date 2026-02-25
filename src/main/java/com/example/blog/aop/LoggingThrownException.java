@@ -53,7 +53,7 @@ public class LoggingThrownException {
                     exceptionMessage
             );
 
-            log.error(errorMessage);
+            log.error(errorMessage, ex);
             slackService.sendMessage(errorMessage);
             throw ex;
         }

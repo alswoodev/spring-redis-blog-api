@@ -56,6 +56,7 @@ public class PostServiceImpl implements PostService {
 
         if (memberInfo != null) {
             postDTO.setUserId(memberInfo.getId());
+            postDTO.setPreview(makePreview(postDTO.getContents()));
             PostDTO.hasNullData(postDTO);
             int count = postMapper.insertPost(postDTO);
             if(count != 1) throw new RuntimeException("게시글 등록 중 오류가 발생했습니다.");
@@ -106,6 +107,7 @@ public class PostServiceImpl implements PostService {
 
         if (postDTO != null && postDTO.getId() != 0 && postDTO.getUserId() != 0) {
             PostDTO.hasNullData(postDTO);
+            postDTO.setPreview(makePreview(postDTO.getContents()));
             postDTO.setUpdateTime(new Date());
             int count = postMapper.updatePost(postDTO);
             if (count != 1) throw new RuntimeException("게시글 수정중 오류가 발생했습니다.");
@@ -133,10 +135,12 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional
     public void registerComment(CommentDTO commentDTO){
         if(commentDTO.getContents() == null || commentDTO.getContents().trim().isEmpty()) throw new InvalidParameterException("contents", PostCode.COMMENT_EMPTY);
         if(commentDTO.getContents().length() > 250) throw new InvalidParameterException("contents", PostCode.COMMENT_TOO_LONG);
         commentMapper.insertComment(commentDTO);
+        postMapper.increaseCount(commentDTO.getPostId());
     }
 
     @Override
@@ -165,12 +169,15 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional
     public void deleteComment(Long userId, Long commentId){
         if(commentId == null || commentId.equals(0L)) throw new InvalidParameterException("id", PostCode.COMMENT_NOT_FOUND);
         CommentDTO existingComment = commentMapper.getById(commentId);
         if(existingComment == null) throw new InvalidParameterException("id", PostCode.COMMENT_NOT_FOUND);
         if (!Objects.equals(userId, existingComment.getUserId())) throw new UnauthorizedException("해당 댓글을 삭제할 수 없는 유저");
         commentMapper.deleteComment(commentId);
+        int updated = postMapper.decreaseCount(existingComment.getPostId());
+        if(updated != 1) throw new InvalidParameterException("id", PostCode.POST_NOT_FOUND);
     }
 
     public void validateFile(FileDTO fileDTO){
@@ -295,5 +302,10 @@ public class PostServiceImpl implements PostService {
             log.error("Update Additional Items ERROR! {}", newItems);
             throw new IllegalStateException("Invalid Additional Items for Post" + newItems + e.getMessage());
         }
+    }
+
+    private String makePreview(String content) {
+        if (content == null) return null;
+        return content.length() <= 200 ? content : content.substring(0, 190);
     }
 }

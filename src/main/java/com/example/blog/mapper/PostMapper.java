@@ -16,4 +16,8 @@ public interface PostMapper {
     public int updatePost(PostDTO postDTO);
 
     public int deletePost(Long id);
+
+    public int increaseCount(Long id);
+
+    public int decreaseCount(Long id);
 }

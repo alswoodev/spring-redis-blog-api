@@ -87,6 +87,7 @@ public class PostServiceTest {
         //then
         assertThat(postDTO.getName()).isEqualTo("title");
         assertThat(postDTO.getContents()).isEqualTo("contents");
+        assertThat(postDTO.getPreview()).isEqualTo("contents");
         assertThat(postDTO.getUserId()).isEqualTo(userId);
         assertThat(postDTO.getFiles().size()).isEqualTo(2); // attachFiles() test
         assertThat(postDTO.getTags().size()).isEqualTo(2); // attachTags() test
@@ -111,6 +112,7 @@ public class PostServiceTest {
         PostDTO post = postService.getPostDetail(postService.findMyPosts(userId).get(0).getId());
         assertThat(post.getName()).isEqualTo("TITLE");
         assertThat(post.getContents()).isEqualTo("CONTENTS");
+        assertThat(postDTO.getPreview()).isEqualTo("CONTENTS");
         assertThat(post.getFiles().size()).isEqualTo(1); // updateFiles() test
         assertThat(post.getTags().size()).isEqualTo(1); // updateTags() test
     }
@@ -142,6 +144,8 @@ public class PostServiceTest {
         postService.registerComment(commentDTO);
 
         //then
+        PostDTO post = postService.getPostDetail(postId);
+        assertThat(post.getCommentCount()).isEqualTo(1);
         assertThat(postService.getPostDetail(postId).getComments().size()).isEqualTo(1);
     }
 
@@ -181,6 +185,8 @@ public class PostServiceTest {
         postService.deleteComment(userId, commentId);
 
         //then
+        PostDTO post = postService.getPostDetail(postId);
+        assertThat(post.getCommentCount()).isEqualTo(0);
         assertThat(postService.getPostDetail(postId).getComments().size()).isEqualTo(0);
     }
 }

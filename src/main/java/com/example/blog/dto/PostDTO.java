@@ -20,7 +20,9 @@ public class PostDTO {
     private boolean isAdmin;
     private String name;
     private String contents;
+    private String preview;
     private int views;
+    private int commentCount;
     private Date createTime;
     private Date updateTime;
 

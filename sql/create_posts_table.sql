@@ -4,6 +4,8 @@ CREATE TABLE posts (
     name VARCHAR(50) NOT NULL,
     contents TEXT NOT NULL,
     views INTEGER DEFAULT 0,
+    comment_count INTEGER DEFAULT 0,
+    preview VARCHAR(200),
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     category_id INTEGER,

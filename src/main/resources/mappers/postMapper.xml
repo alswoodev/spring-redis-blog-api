@@ -7,8 +7,8 @@
 
     <insert id="insertPost" parameterType="com.example.blog.dto.PostDTO" 
                                 useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO posts (name, is_admin, contents, views, category_id, user_id)
-        VALUES (#{name}, #{isAdmin}, #{contents}, #{views}, #{categoryId}, #{userId})
+        INSERT INTO posts (name, is_admin, contents, preview,  views, category_id, user_id)
+        VALUES (#{name}, #{isAdmin}, #{contents}, #{preview}, #{views}, #{categoryId}, #{userId})
     </insert>
 
     <select id="findAllByUserId" resultType="com.example.blog.dto.PostDTO">
@@ -18,6 +18,8 @@
                contents,
                create_time AS createTime,
                views,
+               comment_count AS commentCount,
+               preview,
                category_id AS categoryId,
                user_id AS userId,
                update_time AS updateTime
@@ -34,6 +36,8 @@
             contents,
             is_admin AS isAdmin,
             views,
+            comment_count AS commentCount,
+            preview,
             create_time AS createTime,
             update_time AS updateTime
         FROM posts
@@ -44,6 +48,7 @@
         UPDATE posts
         SET name = #{name},
             contents = #{contents},
+            preview = #{preview},
             views = #{views},
             category_id = #{categoryId},
             user_id = #{userId},
@@ -55,5 +60,17 @@
         DELETE FROM posts
         WHERE id = #{id}
     </delete>
+
+    <update id="increaseCount">
+        UPDATE posts
+        SET comment_count = comment_count + 1
+        WHERE id = #{id}
+    </update>
+
+    <update id="decreaseCount">
+        UPDATE posts
+        SET comment_count = comment_count - 1
+        WHERE id = #{id} AND comment_count &gt; 0
+    </update>
 
 </mapper>

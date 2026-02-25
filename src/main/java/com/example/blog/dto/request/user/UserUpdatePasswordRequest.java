@@ -1,4 +1,4 @@
-package com.example.blog.dto.request;
+package com.example.blog.dto.request.user;
 
 import lombok.Getter;
 import lombok.NonNull;

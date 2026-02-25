@@ -16,6 +16,8 @@ import com.example.blog.dto.request.media.MediaInitRequest;
 import com.example.blog.dto.request.media.MultiUploadCompleteRequest;
 import com.example.blog.service.MediaService;
 
+import io.swagger.v3.oas.annotations.Parameter;
+
 @RestController
 @RequiredArgsConstructor
 public class MediaController {
@@ -26,7 +28,7 @@ public class MediaController {
     @LoginCheck(type = UserType.USER)
     @ResponseStatus(HttpStatus.OK)
     public PresignedUrl initMedia(
-            Long userId,
+            @Parameter(hidden=true) Long userId,
             @RequestBody MediaInitRequest request
     ) {
         PresignedUrl result = mediaService.initMedia(request.getMediaType(), request.getFileSize(), userId);
@@ -36,7 +38,7 @@ public class MediaController {
     @PostMapping("/media/uploaded")
     @LoginCheck( type = UserType.USER )
     public void mediaUploaded(
-            Long userId,
+            @Parameter(hidden=true) Long userId,
             @RequestBody MultiUploadCompleteRequest request
     ) {
         mediaService.completeMultipartUpload(request.getPath(), request.getUploadId(), request.getParts());
@@ -44,7 +46,7 @@ public class MediaController {
 
     @GetMapping("/media/presigned-url")
     @LoginCheck( type = UserType.USER )
-    public PresignedUrlResponse getPresignedUrl(Long userId, @RequestParam String path) {
+    public PresignedUrlResponse getPresignedUrl(@Parameter(hidden=true) Long userId, @RequestParam String path) {
         String presignedUrl = mediaService.getPresignedUrl(path);
         return new PresignedUrlResponse(presignedUrl);
     }

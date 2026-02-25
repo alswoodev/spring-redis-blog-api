@@ -1,4 +1,4 @@
-package com.example.blog.dto.request;
+package com.example.blog.dto.request.user;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -6,9 +6,7 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class UserLoginRequest {
-    @NonNull
-    private String userId;
+public class UserDeleteId {
     @NonNull
     private String password;
 }

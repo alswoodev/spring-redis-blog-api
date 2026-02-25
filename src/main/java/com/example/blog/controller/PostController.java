@@ -4,10 +4,14 @@ import com.example.blog.aop.LoginCheck;
 import com.example.blog.dto.CommentDTO;
 import com.example.blog.dto.PostDTO;
 import com.example.blog.dto.UserDTO;
+import com.example.blog.dto.request.post.CommentRequest;
+import com.example.blog.dto.request.post.PostRegisterRequest;
 import com.example.blog.dto.response.CommonResponse;
+import com.example.blog.dto.response.post.PostSummaryResponse;
 import com.example.blog.service.PostService;
 import com.example.blog.service.UserService;
-import lombok.AllArgsConstructor;
+
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -17,8 +21,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/posts")
@@ -30,27 +37,39 @@ public class PostController {
     private final UserService userService;
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
     @LoginCheck(type = LoginCheck.UserType.USER)
-    public ResponseEntity<CommonResponse<PostDTO>> registerPost(Long userId, @RequestBody PostDTO postDTO) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<CommonResponse<PostDTO>> registerPost(@Parameter(hidden=true) Long userId, 
+                                                                @RequestBody PostRegisterRequest request,
+                                                                UriComponentsBuilder uriBuilder) {
         // Validate that the user exists and retrieve user information
         UserDTO memberInfo = retreiveUser(userId);
 
+        PostDTO postDTO = request.convert();
+
         postService.register(memberInfo.getId(), postDTO);
-        return ResponseEntity.ok(new CommonResponse<PostDTO>(true, postDTO));
+        PostDTO response = postService.getPostDetail(postDTO.getId());
+
+        URI location = uriBuilder.path("/posts/{id}").buildAndExpand(postDTO.getId()).toUri();
+        return ResponseEntity
+            .created(location)
+            .body(new CommonResponse<>(true, response));
     }
 
-    @GetMapping("my-posts")
+    @GetMapping("/mine")
     @LoginCheck(type = LoginCheck.UserType.USER)
-    public ResponseEntity<CommonResponse<List<PostDTO>>> myPostInfo(Long userId) {
+    public ResponseEntity<CommonResponse<List<PostSummaryResponse>>> myPostInfo(@Parameter(hidden=true) Long userId) {
         // Validate that the user exists and retrieve user information
         UserDTO memberInfo = retreiveUser(userId);
 
         List<PostDTO> postDTOList = postService.findMyPosts(memberInfo.getId());
-        return ResponseEntity.ok(new CommonResponse<List<PostDTO>>(true, postDTOList));
+        List<PostSummaryResponse> responses = postDTOList.stream()
+                                                        .map(PostSummaryResponse::convert)
+                                                        .collect(Collectors.toList());
+        return ResponseEntity.ok(new CommonResponse<List<PostSummaryResponse>>(true, responses));
     }
 
-    @GetMapping("{postId}")
+    @GetMapping("/{postId}")
     public ResponseEntity<CommonResponse<PostDTO>> getPostDetail(@PathVariable Long postId){
         PostDTO post = postService.getPostDetail(postId);
         if (post == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
@@ -59,43 +78,43 @@ public class PostController {
 
     @PatchMapping
     @LoginCheck(type = LoginCheck.UserType.USER)
-    public ResponseEntity<CommonResponse<PostDTO>> updatePosts(Long userId,
+    public ResponseEntity<CommonResponse<PostDTO>> updatePosts(@Parameter(hidden=true) Long userId,
                                @RequestBody PostDTO postDTO) {
         // Validate that the user exists and retrieve user information
         UserDTO memberInfo = retreiveUser(userId);
 
         postService.updatePost(memberInfo.getId(), postDTO);
         return ResponseEntity.ok(new CommonResponse<PostDTO>(true, postDTO));
-
     }
 
-    @DeleteMapping("{postId}")
+    @DeleteMapping("/{postId}")
     @LoginCheck(type = LoginCheck.UserType.USER)
-    public ResponseEntity<CommonResponse<PostDeleteRequest>> deleteposts(Long userId,
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteposts(@Parameter(hidden=true) Long userId,
                                @PathVariable Long postId) {
         // Validate that the user exists and retrieve user information
         UserDTO memberInfo = retreiveUser(userId);
         postService.deletePost(memberInfo.getId(), postId);
-        return ResponseEntity.ok(new CommonResponse<>(true, null));
     }
 
-    @PostMapping("{postId}/comments")
-    @ResponseStatus()
+    @PostMapping("/{postId}/comments")
     @LoginCheck(type = LoginCheck.UserType.USER)
-    public ResponseEntity<CommonResponse<CommentDTO>> addComment(Long userId,
+    public ResponseEntity<CommonResponse<CommentDTO>> addComment(@Parameter(hidden=true) Long userId,
                                @PathVariable Long postId,
-                               @RequestBody CommentDTO request) {
+                               @RequestBody CommentRequest request) {
         // Validate that the user exists and retrieve user information
         UserDTO memberInfo = retreiveUser(userId);
         request.setUserId(memberInfo.getId());
         request.setPostId(postId);
-        postService.registerComment(request);
-        return ResponseEntity.ok(new CommonResponse<CommentDTO>(true, request));
+        CommentDTO comment = request.convert();
+        postService.registerComment(comment);
+        CommentDTO response = postService.getCommentDetail(comment.getId());
+        return ResponseEntity.ok(new CommonResponse<CommentDTO>(true, response));
     }
 
-    @PatchMapping("{postId}/comments/{commentId}")
+    @PatchMapping("/{postId}/comments/{commentId}")
     @LoginCheck(type = LoginCheck.UserType.USER)
-    public ResponseEntity<CommonResponse<CommentDTO>> updateComment(Long userId,
+    public ResponseEntity<CommonResponse<CommentDTO>> updateComment(@Parameter(hidden=true) Long userId,
                                @PathVariable Long postId,
                                @PathVariable Long commentId,
                                @RequestBody CommentDTO request) {
@@ -105,18 +124,18 @@ public class PostController {
         request.setPostId(postId);
         request.setId(commentId);
         postService.updateComment(userId, request);
-        return ResponseEntity.ok(new CommonResponse<CommentDTO>(true, null));
+        return ResponseEntity.ok(new CommonResponse<CommentDTO>(true, request));
     }
 
-    @DeleteMapping("{postId}/comments/{commentId}")
+    @DeleteMapping("/{postId}/comments/{commentId}")
     @LoginCheck(type = LoginCheck.UserType.USER)
-    public ResponseEntity<CommonResponse<CommentDTO>> deleteComment(Long userId,
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteComment(@Parameter(hidden=true) Long userId,
                                @PathVariable Long postId,
                                @PathVariable Long commentId) {
         // Validate that the user exists and retrieve user information
         UserDTO memberInfo = retreiveUser(userId);
         postService.deleteComment(memberInfo.getId(), commentId);
-        return ResponseEntity.ok(new CommonResponse<CommentDTO>(true, null));
     }
 
 
@@ -124,20 +143,5 @@ public class PostController {
         UserDTO memberInfo = userService.getUserInfo(userId);
         if (memberInfo == null) throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "User information could not be retrieved.");
         return memberInfo;
-    }
-
-    // -------------- response 객체 --------------
-
-    @Getter
-    @AllArgsConstructor
-    private static class PostResponse {
-        private List<PostDTO> postDTO;
-    }
-
-    @Setter
-    @Getter
-    private static class PostDeleteRequest {
-        private Long userId;
-        private Long postId;
     }
 }

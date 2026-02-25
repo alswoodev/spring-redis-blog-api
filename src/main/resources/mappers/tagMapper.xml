@@ -14,7 +14,8 @@
     <select id="findByPostId" resultType="com.example.blog.dto.TagDTO">
         SELECT t.id,
                t.name,
-               t.create_time
+               t.create_time AS createTime,
+               pt.post_id AS postId
         FROM tags t
         JOIN post_tag pt ON t.id = pt.tag_id
         WHERE pt.post_id = #{postId}

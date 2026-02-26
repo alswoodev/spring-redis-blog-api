@@ -139,8 +139,6 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public void registerComment(CommentDTO commentDTO){
-        if(commentDTO.getContents() == null || commentDTO.getContents().trim().isEmpty()) throw new InvalidParameterException("contents", PostCode.COMMENT_EMPTY);
-        if(commentDTO.getContents().length() > 250) throw new InvalidParameterException("contents", PostCode.COMMENT_TOO_LONG);
         commentMapper.insertComment(commentDTO);
         postMapper.increaseCount(commentDTO.getPostId());
     }
@@ -161,8 +159,6 @@ public class PostServiceImpl implements PostService {
     @Override
     public void updateComment(Long userId, CommentDTO commentDTO){
         if(commentDTO.getId() == null || commentDTO.getId().equals(0L)) throw new InvalidParameterException("id", PostCode.COMMENT_NOT_FOUND);
-        if(commentDTO.getContents() == null || commentDTO.getContents().trim().isEmpty()) throw new InvalidParameterException("contents", PostCode.COMMENT_EMPTY);
-        if(commentDTO.getContents().length() > 250) throw new InvalidParameterException("contents", PostCode.COMMENT_TOO_LONG);
         CommentDTO existingComment = commentMapper.getById(commentDTO.getId());
         if(existingComment == null) throw new InvalidParameterException("id", PostCode.COMMENT_NOT_FOUND);
         if (!Objects.equals(userId, existingComment.getUserId())) throw new UnauthorizedException("해당 댓글을 수정할 수 없는 유저");
@@ -182,31 +178,19 @@ public class PostServiceImpl implements PostService {
         if(updated != 1) throw new InvalidParameterException("id", PostCode.POST_NOT_FOUND);
     }
 
-    public void validateFile(FileDTO fileDTO){
-        if(fileDTO.getPath() == null || fileDTO.getPath().trim() == "") throw new InvalidParameterException("path", PostCode.FILE_NO_URL);
-        if(fileDTO.getName() == null || fileDTO.getName().trim() == "") throw new InvalidParameterException("name", PostCode.FILE_NO_NAME);
-        if(fileDTO.getExtension() == null || fileDTO.getExtension().trim() == "") throw new InvalidParameterException("extension", PostCode.FILE_NO_EXTENSION);
-    }
-
     public void attachFiles(PostDTO postDTO){
         if(postDTO.getFiles() == null || postDTO.getFiles().isEmpty()) return; // No files to attach
-        postDTO.getFiles().forEach(file -> validateFile(file));
         addAdditional(postDTO.getId(), postDTO.getFiles(), FileDTO::setPostId, fileMapper::insertFile);
     }
 
     @CacheEvict(value = "postCache", key = "'getPost' + #postDTO.getId()")
     public void updateFiles(PostDTO postDTO){
         if(postDTO.getFiles() == null) return; // If files field is null, we assume that the files don't need to be updated.
-        postDTO.getFiles().forEach(file -> validateFile(file));
         updateAdditional(postDTO.getId(), fileMapper.findByPostId(postDTO.getId()), postDTO.getFiles(), 
             FileDTO::setPostId, FileDTO::getId, fileMapper::insertFile, fileMapper::deleteFile);
     }
 
     public void addTag(TagDTO tagDTO){
-        if(tagDTO.getName() == null || tagDTO.getName().trim().isEmpty()) throw new InvalidParameterException("name", PostCode.TAG_NO_NAME);
-        if(tagDTO.getName().length() < 2) throw new InvalidParameterException("name", PostCode.TAG_TOO_SHORT);
-        if(tagDTO.getName().length() > 40) throw new InvalidParameterException("name", PostCode.TAG_TOO_LONG);
-        if(tagDTO.getName().contains(" ")) throw new InvalidParameterException("name", PostCode.TAG_NO_SPACE);
         // Check if the tag already exists in the tags table to prevent duplicates
         TagDTO existingTag = tagMapper.findByName(tagDTO.getName());
         if(existingTag == null) {

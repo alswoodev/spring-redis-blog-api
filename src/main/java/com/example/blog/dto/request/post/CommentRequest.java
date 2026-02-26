@@ -2,6 +2,8 @@ package com.example.blog.dto.request.post;
 
 import com.example.blog.dto.CommentDTO;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @Getter
@@ -10,6 +12,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CommentRequest {
+	@NotEmpty(message="{comment.empty}")
+	@Size(max=250, message="{comment.too.long}")
 	private String contents;
 	private Long subCommentId;
 

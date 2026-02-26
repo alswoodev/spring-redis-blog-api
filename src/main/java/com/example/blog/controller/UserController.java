@@ -13,7 +13,7 @@ import com.example.blog.utils.SessionUtil;
 
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpSession;
-
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,14 +32,14 @@ public class UserController {
 
     @PostMapping("/sign-up")
     @ResponseStatus(HttpStatus.CREATED)
-    public void signUp(@RequestBody UserSignUpRequest request) {
+    public void signUp(@Valid @RequestBody UserSignUpRequest request) {
         UserDTO user = UserDTO.builder().userId(request.getUserId()).password(request.getPassword()).nickname(request.getNickname()).build();
         userService.register(user);
     }
 
     @PostMapping("/sign-in")
     @ResponseStatus(HttpStatus.OK)
-    public void login(@RequestBody UserSignInRequest request, 
+    public void login(@Valid @RequestBody UserSignInRequest request, 
                                              HttpSession session) {
         UserDTO user = userService.login(request.getUserId(), request.getPassword());
 
@@ -67,7 +67,7 @@ public class UserController {
     @PatchMapping("/me/password")
     @LoginCheck(type = LoginCheck.UserType.USER)
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateUserPassword(@Parameter(hidden=true) Long id, @RequestBody UserUpdatePasswordRequest request,
+    public void updateUserPassword(@Parameter(hidden=true) Long id, @Valid @RequestBody UserUpdatePasswordRequest request,
                                         HttpSession session) {
         // Unauthorized check via @LoginCheck annotation
 
@@ -78,7 +78,7 @@ public class UserController {
     @DeleteMapping("/me")
     @LoginCheck(type = LoginCheck.UserType.USER)
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteId(@Parameter(hidden=true) Long id, @RequestBody UserDeleteId userDeleteId,
+    public void deleteId(@Parameter(hidden=true) Long id, @Valid @RequestBody UserDeleteId userDeleteId,
                                        HttpSession session) {
         // Unauthorized check via @LoginCheck annotation
 

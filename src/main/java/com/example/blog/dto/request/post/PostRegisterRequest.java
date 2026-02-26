@@ -1,6 +1,5 @@
 package com.example.blog.dto.request.post;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -8,22 +7,21 @@ import com.example.blog.dto.FileDTO;
 import com.example.blog.dto.PostDTO;
 import com.example.blog.dto.TagDTO;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.Setter;
 
 @Getter
 @Setter
 public class PostRegisterRequest {
-    @NonNull
+    @NotNull(message="{post.no.title}")
     private String name;
 
-    @NonNull
     private String contents;
 
     private Integer categoryId;
 
-    @NonNull
+    @NotNull(message="{post.no.writer}")
     private Long userId;
     
     // 1:N Mapping

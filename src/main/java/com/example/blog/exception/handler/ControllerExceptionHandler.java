@@ -1,7 +1,5 @@
 package com.example.blog.exception.handler;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +7,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -32,6 +31,12 @@ public class ControllerExceptionHandler {
     public ResponseEntity<Object> handleInvalidParameterException(InvalidParameterException e, Locale locale) {
         String message = messageSource.getMessage(e.getCode().getMessageKey(), null, locale);
         return ResponseEntity.badRequest().body(new ErrorResponse(e.getCode().getCode(), message));
+    }
+
+    @ExceptionHandler({MethodArgumentNotValidException.class})
+    public ResponseEntity<Object> handleInvalidParameterException(MethodArgumentNotValidException e, Locale locale) {
+        String message = messageSource.getMessage(e.getBindingResult().getFieldError(), locale);
+        return ResponseEntity.badRequest().body(new ErrorResponse("INVALID_PARAMETER", message));
     }
 
     @ExceptionHandler({IllegalArgumentException.class})

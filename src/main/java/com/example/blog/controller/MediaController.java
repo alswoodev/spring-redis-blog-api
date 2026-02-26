@@ -9,6 +9,8 @@ import lombok.ToString;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
+
 import com.example.blog.aop.LoginCheck;
 import com.example.blog.aop.LoginCheck.UserType;
 import com.example.blog.dto.PresignedUrl;
@@ -29,7 +31,7 @@ public class MediaController {
     @ResponseStatus(HttpStatus.OK)
     public PresignedUrl initMedia(
             @Parameter(hidden=true) Long userId,
-            @RequestBody MediaInitRequest request
+            @Valid @RequestBody MediaInitRequest request
     ) {
         PresignedUrl result = mediaService.initMedia(request.getMediaType(), request.getFileSize(), userId);
         return result;
@@ -39,7 +41,7 @@ public class MediaController {
     @LoginCheck( type = UserType.USER )
     public void mediaUploaded(
             @Parameter(hidden=true) Long userId,
-            @RequestBody MultiUploadCompleteRequest request
+            @Valid @RequestBody MultiUploadCompleteRequest request
     ) {
         mediaService.completeMultipartUpload(request.getPath(), request.getUploadId(), request.getParts());
     }

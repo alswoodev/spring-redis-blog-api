@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import jakarta.validation.Valid;
+
 import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,7 +42,7 @@ public class PostController {
     @LoginCheck(type = LoginCheck.UserType.USER)
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<CommonResponse<PostDTO>> registerPost(@Parameter(hidden=true) Long userId, 
-                                                                @RequestBody PostRegisterRequest request,
+                                                                @Valid @RequestBody PostRegisterRequest request,
                                                                 UriComponentsBuilder uriBuilder) {
         // Validate that the user exists and retrieve user information
         UserDTO memberInfo = retreiveUser(userId);
@@ -79,7 +81,7 @@ public class PostController {
     @PatchMapping
     @LoginCheck(type = LoginCheck.UserType.USER)
     public ResponseEntity<CommonResponse<PostDTO>> updatePosts(@Parameter(hidden=true) Long userId,
-                               @RequestBody PostDTO postDTO) {
+                               @Valid @RequestBody PostDTO postDTO) {
         // Validate that the user exists and retrieve user information
         UserDTO memberInfo = retreiveUser(userId);
 
@@ -101,7 +103,7 @@ public class PostController {
     @LoginCheck(type = LoginCheck.UserType.USER)
     public ResponseEntity<CommonResponse<CommentDTO>> addComment(@Parameter(hidden=true) Long userId,
                                @PathVariable Long postId,
-                               @RequestBody CommentRequest request) {
+                               @Valid @RequestBody CommentRequest request) {
         // Validate that the user exists and retrieve user information
         UserDTO memberInfo = retreiveUser(userId);
         request.setUserId(memberInfo.getId());
@@ -117,7 +119,7 @@ public class PostController {
     public ResponseEntity<CommonResponse<CommentDTO>> updateComment(@Parameter(hidden=true) Long userId,
                                @PathVariable Long postId,
                                @PathVariable Long commentId,
-                               @RequestBody CommentDTO request) {
+                               @Valid @RequestBody CommentDTO request) {
         // Validate that the user exists and retrieve user information
         UserDTO memberInfo = retreiveUser(userId);
         request.setUserId(memberInfo.getId());
